@@ -122,11 +122,12 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actioncmd)
         self.toolBar.addAction(self.actionGoogle)
 
-        self.action_enter_pressed = QtWidgets.QAction(MainWindow)
-        self.action_enter_pressed.setShortcut(QtCore.Qt.Key_Return)
+        # self.action_enter_pressed = QtWidgets.QAction(MainWindow)
+        # self.action_enter_pressed.setShortcut(QtCore.Qt.Key_Return)
         # self.tabWidget.addAction(self.action_enter_pressed)
+        # self.action_enter_pressed.triggered.connect(self.add_text_tab)
+        # MainWindow.keyPressEvent = self.newOnkeyPressEvent
 
-        MainWindow.keyPressEvent = self.newOnkeyPressEvent
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -151,7 +152,6 @@ class Ui_MainWindow(object):
         self.actionGoogle.triggered.connect(self.add_google_tab)
         self.actionNew_Text_File.triggered.connect(self.add_text_tab)
         self.actionSave.triggered.connect(self.save_clicked)
-        # self.action_enter_pressed.triggered.connect(self.add_text_tab)
 
     def close_my_tab(self, n):
         self.tabWidget.removeTab(n)
@@ -236,7 +236,7 @@ class Ui_MainWindow(object):
         self.cmd_commands_tab.textBrowser.setFont(font)
 
     def add_google_tab(self):
-        # Google Tab
+        # google Tab
         self.google_tab = QtWidgets.QWidget()
         self.google_tab.setObjectName("tab_3")
         self.google_tab.savable = False
@@ -307,12 +307,17 @@ class Ui_MainWindow(object):
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             print("User has pushed escape")
 
-    def save_clicked(self, i):
+    def save_clicked(self):
         widget = self.tabWidget.currentWidget()
-        if widget.savable:
-            text = widget.textEdit.toPlainText()
-            print(text)
-
+        if widget != None:
+            if widget.savable:
+                self.name = QtWidgets.QFileDialog.getSaveFileName(caption="Save File", filter="Text files (*.py)")
+                if self.name:
+                    print(self.name)
+                # file = open(name,'w')
+                # text = widget.textEdit.toPlainText()
+                # file.write(text)
+                # file.close()
 
 if __name__ == "__main__":
     import sys

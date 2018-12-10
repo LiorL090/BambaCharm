@@ -236,7 +236,7 @@ class Ui_MainWindow(object):
         self.cmd_commands_tab.textBrowser.setFont(font)
 
     def add_google_tab(self):
-        # google Tab
+        # Google Tab
         self.google_tab = QtWidgets.QWidget()
         self.google_tab.setObjectName("tab_3")
         self.google_tab.savable = False

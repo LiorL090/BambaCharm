@@ -1,5 +1,5 @@
 # BambaCharm
-python IDE written in python.
+
 The project is a convenient IDE environment for Python, the main purpose of which is to allow the user to create Python files to write code in a convenient way and run it from the software itself.
 The software will allow you to open and edit existing files, save files in the cloud and access them with the help of a registered user from any computer on which the software is installed.
  In addition, the program will contain additional pizzas, such as the ability to write text files, open cmd cards from the software, Google tabs, summaries - some of them are ready in advance and summaries that the registered user will create and can share and more ...

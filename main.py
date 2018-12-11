@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
+import re
 
 # colors
 yellow = "rgb(155, 140, 30)"
@@ -151,7 +152,8 @@ class Ui_MainWindow(object):
         self.actioncmd.triggered.connect(self.add_cmd_tab)
         self.actionGoogle.triggered.connect(self.add_google_tab)
         self.actionNew_Text_File.triggered.connect(self.add_text_tab)
-        self.actionSave.triggered.connect(self.save_clicked)
+        self.actionSaveAs.triggered.connect(self.save_as_clicked)
+        self.actionOpen.triggered.connect(self.open_clicked)
 
     def close_my_tab(self, n):
         self.tabWidget.removeTab(n)
@@ -162,6 +164,8 @@ class Ui_MainWindow(object):
         self.tab_python.setObjectName("python_tab")
         self.tab_python.setStyleSheet("background-color: rgb(64, 72, 80);")
         self.tab_python.savable = True
+        self.tab_python.path = ""
+        self.tab_python.file_name = "Python"
         self.verticalLayout = QtWidgets.QVBoxLayout(self.tab_python)
         self.verticalLayout.setObjectName("verticalLayout")
         self.tab_python.textEdit = QtWidgets.QTextEdit(self.tab_python)
@@ -217,7 +221,7 @@ class Ui_MainWindow(object):
     def add_cmd_commands_tab(self):
         # cmd commands tab
         self.cmd_commands_tab = QtWidgets.QWidget()
-        self.cmd_commands_tab.setObjectName("tab")
+        self.cmd_commands_tab.setObjectName("cmd_commands_tab")
         self.cmd_commands_tab.savable = False
         self.cmd_commands_tab.gridLayout = QtWidgets.QGridLayout(self.cmd_commands_tab)
         self.cmd_commands_tab.gridLayout.setObjectName("gridLayout_2")
@@ -238,7 +242,7 @@ class Ui_MainWindow(object):
     def add_google_tab(self):
         # google Tab
         self.google_tab = QtWidgets.QWidget()
-        self.google_tab.setObjectName("tab_3")
+        self.google_tab.setObjectName("google_tab")
         self.google_tab.savable = False
         self.google_tab.gridLayout = QtWidgets.QGridLayout(self.google_tab)
         self.google_tab.gridLayout.setObjectName("gridLayout_4")
@@ -251,8 +255,10 @@ class Ui_MainWindow(object):
     def add_text_tab(self):
         # text tab
         self.text_tab = QtWidgets.QWidget()
-        self.text_tab.setObjectName("tab_2")
+        self.text_tab.setObjectName("text_tab")
         self.text_tab.savable = True
+        self.text_tab.path = ""
+        self.text_tab.file_name = "Text"
         self.text_tab.setStyleSheet("background-color: rgb(64, 72, 80);")
         self.text_tab.gridLayout = QtWidgets.QGridLayout(self.text_tab)
         self.text_tab.gridLayout.setObjectName("gridLayout_3")
@@ -278,7 +284,7 @@ class Ui_MainWindow(object):
     def add_cmd_tab(self):
         # cmd tab
         self.cmd_tab = QtWidgets.QWidget()
-        self.cmd_tab.setObjectName("tab_2")
+        self.cmd_tab.setObjectName("cmd_tab")
         self.cmd_tab.savable = False
         self.cmd_tab.setStyleSheet("background-color: rgb(64, 72, 80);")
         self.cmd_tab.gridLayout = QtWidgets.QGridLayout(self.cmd_tab)
@@ -307,17 +313,64 @@ class Ui_MainWindow(object):
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             print("User has pushed escape")
 
+    def save_as_clicked(self):
+        widget = self.tabWidget.currentWidget()
+        if widget is not None:
+            if widget.savable:
+                if widget.objectName() == "text_tab":
+                    ending = ".txt"
+                    not_end_with = ".py"
+                else:
+                    ending = ".py"
+                    not_end_with = ".txt"
+                name = QtWidgets.QFileDialog.getSaveFileName(caption="Save File", filter="Text files (*%s)" % ending)
+                if name:
+                    widget.path = name[0].replace(not_end_with, ending)
+                    try:
+                        print(widget.path)
+                        match = re.search(r'/([\w -]+%s)' % ending, widget.path)
+                        if match:
+                            widget.file_name = match.group(1)
+                            print(widget.file_name)
+                        else:
+                            print("not match")
+                        file = open(widget.path, 'w')
+                        text = widget.textEdit.toPlainText()
+                        file.write(text)
+                        file.close()
+                        self.tabWidget.setTabText(self.tabWidget.indexOf(widget),
+                                                  _translate("MainWindow", widget.file_name))
+                    except:
+                        pass
+
     def save_clicked(self):
         widget = self.tabWidget.currentWidget()
-        if widget != None:
+        if widget is not None:
             if widget.savable:
-                self.name = QtWidgets.QFileDialog.getSaveFileName(caption="Save File", filter="Text files (*.py)")
-                if self.name:
-                    print(self.name)
-                # file = open(name,'w')
+                try:
+                    file = open(widget.path, 'w')
+                    text = widget.textEdit.toPlainText()
+                    file.write(text)
+                    file.close()
+                except:
+                    pass
+
+    def open_clicked(self):
+        name = QtWidgets.QFileDialog.getOpenFileName(caption="Choose File", filter="Text files (*.py *.txt)")
+        if name:
+            path = name[0]
+            try:
+                if path.endswith(".py"):
+                    self.add_python_tab()
+                if path.endswith(".txt"):
+                    self.add_text_tab()
+                # file = open(widget.path, 'w')
                 # text = widget.textEdit.toPlainText()
                 # file.write(text)
                 # file.close()
+            except:
+                pass
+
 
 if __name__ == "__main__":
     import sys

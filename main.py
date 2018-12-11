@@ -153,6 +153,7 @@ class Ui_MainWindow(object):
         self.actionGoogle.triggered.connect(self.add_google_tab)
         self.actionNew_Text_File.triggered.connect(self.add_text_tab)
         self.actionSaveAs.triggered.connect(self.save_as_clicked)
+        self.actionSave.triggered.connect(self.save_clicked)
         self.actionOpen.triggered.connect(self.open_clicked)
 
     def close_my_tab(self, n):
@@ -214,9 +215,9 @@ class Ui_MainWindow(object):
         self.tab_python.textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.tab_python.textBrowser.setStyleSheet(
             "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
-        # self.textBrowser.setText()
         self.verticalLayout.addWidget(self.tab_python.textBrowser)
         self.tabWidget.addTab(self.tab_python, "Python")
+        return self.tab_python
 
     def add_cmd_commands_tab(self):
         # cmd commands tab
@@ -280,6 +281,7 @@ class Ui_MainWindow(object):
         self.text_tab.textEdit.setObjectName("plainTextEdit")
         self.text_tab.gridLayout.addWidget(self.text_tab.textEdit, 0, 0, 1, 1)
         self.tabWidget.addTab(self.text_tab, "Text")
+        return self.text_tab
 
     def add_cmd_tab(self):
         # cmd tab
@@ -327,21 +329,17 @@ class Ui_MainWindow(object):
                 if name:
                     widget.path = name[0].replace(not_end_with, ending)
                     try:
-                        print(widget.path)
                         match = re.search(r'/([\w -]+%s)' % ending, widget.path)
                         if match:
                             widget.file_name = match.group(1)
-                            print(widget.file_name)
-                        else:
-                            print("not match")
                         file = open(widget.path, 'w')
                         text = widget.textEdit.toPlainText()
                         file.write(text)
                         file.close()
                         self.tabWidget.setTabText(self.tabWidget.indexOf(widget),
                                                   _translate("MainWindow", widget.file_name))
-                    except:
-                        pass
+                    except Exception as error:
+                        print('Caught this error: ' + repr(error))
 
     def save_clicked(self):
         widget = self.tabWidget.currentWidget()
@@ -352,8 +350,9 @@ class Ui_MainWindow(object):
                     text = widget.textEdit.toPlainText()
                     file.write(text)
                     file.close()
-                except:
-                    pass
+                except Exception as error:
+                    print('Caught this error: ' + repr(error))
+
 
     def open_clicked(self):
         name = QtWidgets.QFileDialog.getOpenFileName(caption="Choose File", filter="Text files (*.py *.txt)")
@@ -361,15 +360,34 @@ class Ui_MainWindow(object):
             path = name[0]
             try:
                 if path.endswith(".py"):
-                    self.add_python_tab()
-                if path.endswith(".txt"):
-                    self.add_text_tab()
-                # file = open(widget.path, 'w')
-                # text = widget.textEdit.toPlainText()
-                # file.write(text)
-                # file.close()
-            except:
-                pass
+                    tab = self.add_python_tab()
+                    tab.path = path
+                    ending = ".py"
+                    match = re.search(r'/([\w -]+%s)' % ending, path)
+                    if match:
+                        tab.file_name = match.group(1)
+                    self.tabWidget.setTabText(self.tabWidget.indexOf(tab),
+                                              _translate("MainWindow", tab.file_name))
+                    file = open(path, 'r')
+                    text = file.read()
+                    tab.textEdit.setPlainText(text)
+                    file.close()
+                else:
+                    tab = self.add_text_tab()
+                    tab.path = path
+                    ending = ".txt"
+                    match = re.search(r'/([\w -]+%s)' % ending, path)
+                    if match:
+                        tab.file_name = match.group(1)
+                    self.tabWidget.setTabText(self.tabWidget.indexOf(tab),
+                                              _translate("MainWindow", tab.file_name))
+                    file = open(path, 'r')
+                    text = file.read()
+                    tab.textEdit.setPlainText(text)
+                    file.close()
+
+            except Exception as error:
+                print('Caught this error: ' + repr(error))
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ _translate = QtCore.QCoreApplication.translate
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        """Sets the basics frames and widgets loads the icons and actions"""
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(995, 760)
         icon = QtGui.QIcon()
@@ -134,6 +135,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
+        """Sets titles and connects the buttons and actions to their functions"""
         MainWindow.setWindowTitle(_translate("MainWindow", "BambaCharm"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
@@ -157,10 +159,11 @@ class Ui_MainWindow(object):
         self.actionOpen.triggered.connect(self.open_clicked)
 
     def close_my_tab(self, n):
+        """Closes the tab"""
         self.tabWidget.removeTab(n)
 
     def add_python_tab(self):
-        # python tab
+        """Adds python tab to the tabWidget"""
         self.tab_python = QtWidgets.QWidget()
         self.tab_python.setObjectName("python_tab")
         self.tab_python.setStyleSheet("background-color: rgb(64, 72, 80);")
@@ -220,7 +223,7 @@ class Ui_MainWindow(object):
         return self.tab_python
 
     def add_cmd_commands_tab(self):
-        # cmd commands tab
+        """Adds cmd commands tab to the tabWidget"""
         self.cmd_commands_tab = QtWidgets.QWidget()
         self.cmd_commands_tab.setObjectName("cmd_commands_tab")
         self.cmd_commands_tab.savable = False
@@ -241,7 +244,7 @@ class Ui_MainWindow(object):
         self.cmd_commands_tab.textBrowser.setFont(font)
 
     def add_google_tab(self):
-        # google Tab
+        """Adds google tab to the tabWidget"""
         self.google_tab = QtWidgets.QWidget()
         self.google_tab.setObjectName("google_tab")
         self.google_tab.savable = False
@@ -254,7 +257,7 @@ class Ui_MainWindow(object):
         self.google_tab.browser.setUrl(QtCore.QUrl("https://google.com"))
 
     def add_text_tab(self):
-        # text tab
+        """Adds text tab to the tabWidget"""
         self.text_tab = QtWidgets.QWidget()
         self.text_tab.setObjectName("text_tab")
         self.text_tab.savable = True
@@ -284,7 +287,7 @@ class Ui_MainWindow(object):
         return self.text_tab
 
     def add_cmd_tab(self):
-        # cmd tab
+        """Adds cmd tab to the tabWidget"""
         self.cmd_tab = QtWidgets.QWidget()
         self.cmd_tab.setObjectName("cmd_tab")
         self.cmd_tab.savable = False
@@ -312,10 +315,12 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.cmd_tab, "cmd")
 
     def newOnkeyPressEvent(self, qKeyEvent):
+        """What happens when some key is clicked"""
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             print("User has pushed escape")
 
     def save_as_clicked(self):
+        """Save as button is clicked"""
         widget = self.tabWidget.currentWidget()
         if widget is not None:
             if widget.savable:
@@ -342,6 +347,7 @@ class Ui_MainWindow(object):
                         print('Caught this error: ' + repr(error))
 
     def save_clicked(self):
+        """Save button is clicked"""
         widget = self.tabWidget.currentWidget()
         if widget is not None:
             if widget.savable:
@@ -353,8 +359,8 @@ class Ui_MainWindow(object):
                 except Exception as error:
                     print('Caught this error: ' + repr(error))
 
-
     def open_clicked(self):
+        """Open button is clicked"""
         name = QtWidgets.QFileDialog.getOpenFileName(caption="Choose File", filter="Text files (*.py *.txt)")
         if name:
             path = name[0]
@@ -388,6 +394,11 @@ class Ui_MainWindow(object):
 
             except Exception as error:
                 print('Caught this error: ' + repr(error))
+
+    def python_run_clicked(self):
+        """run button in python tab clicked"""
+        widget = self.tabWidget.currentWidget()
+
 
 
 if __name__ == "__main__":

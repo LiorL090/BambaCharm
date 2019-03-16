@@ -33,10 +33,6 @@ def make_jupyter_widget_with_kernel():
     kernel_client = kernel_manager.client()
     kernel_client.start_channels()
 
-    textEdit = QtWidgets.QTextEdit()
-    textEdit.setStyleSheet(
-        "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % blue)
-
     jupyter_widget = RichJupyterWidget()
     jupyter_widget.kernel_manager = kernel_manager
     jupyter_widget.kernel_client = kernel_client

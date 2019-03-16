@@ -8,6 +8,10 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import re
+import subprocess
+
+from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from qtconsole.manager import QtKernelManager
 
 # colors
 yellow = "rgb(155, 140, 30)"
@@ -17,6 +21,32 @@ red = "rgb(188, 84, 84)"
 purple = "rgb(97, 74, 232)"
 _translate = QtCore.QCoreApplication.translate
 
+USE_KERNEL = 'python3'
+
+
+def make_jupyter_widget_with_kernel():
+    """Start a kernel, connect to it, and create a RichJupyterWidget to use it
+    """
+    kernel_manager = QtKernelManager(kernel_name=USE_KERNEL)
+    kernel_manager.start_kernel()
+
+    kernel_client = kernel_manager.client()
+    kernel_client.start_channels()
+
+    textEdit = QtWidgets.QTextEdit()
+    textEdit.setStyleSheet(
+        "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % blue)
+
+    jupyter_widget = RichJupyterWidget()
+    jupyter_widget.kernel_manager = kernel_manager
+    jupyter_widget.kernel_client = kernel_client
+    # font = QtGui.QFont("Times", 15, QtGui.QFont.Bold)
+    # font.setFamily("Courier")
+    # font.setStyleHint(QtGui.QFont.Monospace)
+    # font.setFixedPitch(True)
+    # font.setPointSize(10)
+    # jupyter_widget._set_font(font)
+    return jupyter_widget
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -160,6 +190,10 @@ class Ui_MainWindow(object):
 
     def close_my_tab(self, n):
         """Closes the tab"""
+        widget = self.tabWidget.currentWidget()
+        if widget.objectName() == "python_tab":
+            widget.jupyter_widget.kernel_client.stop_channels()
+            widget.jupyter_widget.kernel_manager.shutdown_kernel()
         self.tabWidget.removeTab(n)
 
     def add_python_tab(self):
@@ -211,15 +245,19 @@ class Ui_MainWindow(object):
         self.tab_python.stopButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.tab_python.stopButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.tab_python.textBrowser = QtWidgets.QTextBrowser(self.tab_python)
-        self.tab_python.textBrowser.setMaximumSize(QtCore.QSize(16777215, 192))
-        self.tab_python.textBrowser.setObjectName("textBrowser")
-        self.tab_python.textBrowser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.tab_python.textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        self.tab_python.textBrowser.setStyleSheet(
-            "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
-        self.verticalLayout.addWidget(self.tab_python.textBrowser)
+        # self.tab_python.textBrowser = QtWidgets.QTextBrowser(self.tab_python)
+        # self.tab_python.textBrowser.setMaximumSize(QtCore.QSize(16777215, 192))
+        # self.tab_python.textBrowser.setObjectName("textBrowser")
+        # self.tab_python.textBrowser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        # self.tab_python.textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        # self.tab_python.textBrowser.setStyleSheet(
+        #     "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
+        # self.verticalLayout.addWidget(self.tab_python.textBrowser)
+        self.tab_python.jupyter_widget = make_jupyter_widget_with_kernel()
+        self.tab_python.jupyter_widget.setMaximumSize(QtCore.QSize(16777215, 192))
+        self.verticalLayout.addWidget(self.tab_python.jupyter_widget)
         self.tabWidget.addTab(self.tab_python, "Python")
+        self.tab_python.playButton.clicked.connect(self.python_run_clicked)
         return self.tab_python
 
     def add_cmd_commands_tab(self):
@@ -292,8 +330,8 @@ class Ui_MainWindow(object):
         self.cmd_tab.setObjectName("cmd_tab")
         self.cmd_tab.savable = False
         self.cmd_tab.setStyleSheet("background-color: rgb(64, 72, 80);")
-        self.cmd_tab.gridLayout = QtWidgets.QGridLayout(self.cmd_tab)
-        self.cmd_tab.gridLayout.setObjectName("gridLayout_3")
+        self.cmd_tab.verticalLayout = QtWidgets.QVBoxLayout(self.cmd_tab)
+        self.cmd_tab.verticalLayout.setObjectName("gridLayout_3")
         self.cmd_tab.textEdit = QtWidgets.QTextEdit(self.cmd_tab)
         font = QtGui.QFont()
         font.setFamily("Courier")
@@ -311,7 +349,20 @@ class Ui_MainWindow(object):
         self.cmd_tab.textEdit.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.cmd_tab.textEdit.setObjectName("plainTextEdit")
         # self.plainTextEdit5.addAction(self.action_enter_pressed)
-        self.cmd_tab.gridLayout.addWidget(self.cmd_tab.textEdit, 0, 0, 1, 1)
+        self.cmd_tab.textEditCommands = QtWidgets.QTextEdit(self.cmd_tab)
+        self.cmd_tab.textEditCommands.setTabStopWidth(4 * metrics.width(' '))
+        self.cmd_tab.textEditCommands.setFont(font)
+        self.cmd_tab.textEditCommands.setStyleSheet(
+            "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
+        self.cmd_tab.textEditCommands.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.cmd_tab.textEditCommands.setFrameShadow(QtWidgets.QFrame.Plain)
+        # self.cmd_tab.textEditCommands.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        # self.cmd_tab.textEditCommands.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        self.cmd_tab.textEditCommands.setObjectName("plainTextEdit")
+        self.cmd_tab.textEditCommands.setMaximumSize(QtCore.QSize(16777215, 30))
+
+        self.cmd_tab.verticalLayout.addWidget(self.cmd_tab.textEdit)
+        self.cmd_tab.verticalLayout.addWidget(self.cmd_tab.textEditCommands)
         self.tabWidget.addTab(self.cmd_tab, "cmd")
 
     def newOnkeyPressEvent(self, qKeyEvent):
@@ -398,6 +449,11 @@ class Ui_MainWindow(object):
     def python_run_clicked(self):
         """run button in python tab clicked"""
         widget = self.tabWidget.currentWidget()
+        p = subprocess.Popen(["python", widget.path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for line in p.stdout:
+            line = line.decode('utf-8')
+            line = widget.textBrowser.toPlainText() + line
+            widget.textBrowser.setPlainText(line)
 
 
 

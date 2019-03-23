@@ -39,6 +39,7 @@ def make_jupyter_widget_with_kernel():
     jupyter_widget._display_banner = False
     return jupyter_widget
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         """Sets the basics frames and widgets loads the icons and actions"""
@@ -456,7 +457,6 @@ class Ui_MainWindow(object):
             line = line.decode('utf-8')
             line = widget.textBrowser.toPlainText() + line
             widget.textBrowser.setPlainText(line)
-
 
 
 if __name__ == "__main__":

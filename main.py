@@ -36,12 +36,7 @@ def make_jupyter_widget_with_kernel():
     jupyter_widget = RichJupyterWidget()
     jupyter_widget.kernel_manager = kernel_manager
     jupyter_widget.kernel_client = kernel_client
-    # font = QtGui.QFont("Times", 15, QtGui.QFont.Bold)
-    # font.setFamily("Courier")
-    # font.setStyleHint(QtGui.QFont.Monospace)
-    # font.setFixedPitch(True)
-    # font.setPointSize(10)
-    # jupyter_widget._set_font(font)
+    jupyter_widget._display_banner = False
     return jupyter_widget
 
 class Ui_MainWindow(object):
@@ -241,14 +236,6 @@ class Ui_MainWindow(object):
         self.tab_python.stopButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.tab_python.stopButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        # self.tab_python.textBrowser = QtWidgets.QTextBrowser(self.tab_python)
-        # self.tab_python.textBrowser.setMaximumSize(QtCore.QSize(16777215, 192))
-        # self.tab_python.textBrowser.setObjectName("textBrowser")
-        # self.tab_python.textBrowser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        # self.tab_python.textBrowser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        # self.tab_python.textBrowser.setStyleSheet(
-        #     "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
-        # self.verticalLayout.addWidget(self.tab_python.textBrowser)
         self.tab_python.jupyter_widget = make_jupyter_widget_with_kernel()
         self.tab_python.jupyter_widget.setMaximumSize(QtCore.QSize(16777215, 192))
         self.verticalLayout.addWidget(self.tab_python.jupyter_widget)
@@ -338,12 +325,13 @@ class Ui_MainWindow(object):
         self.cmd_tab.textEdit.setTabStopWidth(4 * metrics.width(' '))
         self.cmd_tab.textEdit.setFont(font)
         self.cmd_tab.textEdit.setStyleSheet(
-            "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % purple)
+            "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 8pt; color: white; background-color: rgb(34, 34, 34);" % purple)
         self.cmd_tab.textEdit.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.cmd_tab.textEdit.setFrameShadow(QtWidgets.QFrame.Plain)
         self.cmd_tab.textEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.cmd_tab.textEdit.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.cmd_tab.textEdit.setObjectName("plainTextEdit")
+        self.cmd_tab.textEdit.setReadOnly(True)
         # self.plainTextEdit5.addAction(self.action_enter_pressed)
         self.cmd_tab.textEditCommands = QtWidgets.QTextEdit(self.cmd_tab)
         self.cmd_tab.textEditCommands.setTabStopWidth(4 * metrics.width(' '))
@@ -352,19 +340,37 @@ class Ui_MainWindow(object):
             "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % red)
         self.cmd_tab.textEditCommands.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.cmd_tab.textEditCommands.setFrameShadow(QtWidgets.QFrame.Plain)
-        # self.cmd_tab.textEditCommands.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        # self.cmd_tab.textEditCommands.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        self.cmd_tab.textEditCommands.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.cmd_tab.textEditCommands.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.cmd_tab.textEditCommands.setObjectName("plainTextEdit")
         self.cmd_tab.textEditCommands.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.cmd_tab.textEditCommands.keyPressEvent = self.enter_clicked
 
         self.cmd_tab.verticalLayout.addWidget(self.cmd_tab.textEdit)
         self.cmd_tab.verticalLayout.addWidget(self.cmd_tab.textEditCommands)
         self.tabWidget.addTab(self.cmd_tab, "cmd")
+        self.add_cmd_commands_tab()
 
-    def newOnkeyPressEvent(self, qKeyEvent):
-        """What happens when some key is clicked"""
+    def enter_clicked(self, qKeyEvent):
+        widget = self.tabWidget.currentWidget()
+        """What happens when enter key is clicked"""
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
-            print("User has pushed escape")
+            self.run_cmd_command()
+            qKeyEvent.accept()
+            return
+        else:
+            qKeyEvent.ignore()
+            return QtWidgets.QTextEdit.keyPressEvent(widget.textEditCommands, qKeyEvent)
+
+    def run_cmd_command(self):
+        widget = self.tabWidget.currentWidget()
+        command = widget.textEditCommands.toPlainText()
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             shell=True)
+        output = p.communicate()[0].decode('utf-8')
+        text = widget.textEdit.toPlainText() + "\n>>>" + command + "\n" + output
+        widget.textEdit.setPlainText(text)
+        widget.textEditCommands.setPlainText("")
 
     def save_as_clicked(self):
         """Save as button is clicked"""

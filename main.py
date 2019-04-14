@@ -21,24 +21,6 @@ red = "rgb(188, 84, 84)"
 purple = "rgb(97, 74, 232)"
 _translate = QtCore.QCoreApplication.translate
 
-USE_KERNEL = 'python3'
-
-
-def make_jupyter_widget_with_kernel():
-    """Start a kernel, connect to it, and create a RichJupyterWidget to use it
-    """
-    kernel_manager = QtKernelManager(kernel_name=USE_KERNEL)
-    kernel_manager.start_kernel()
-
-    kernel_client = kernel_manager.client()
-    kernel_client.start_channels()
-
-    jupyter_widget = RichJupyterWidget()
-    jupyter_widget.kernel_manager = kernel_manager
-    jupyter_widget.kernel_client = kernel_client
-    jupyter_widget._display_banner = False
-    return jupyter_widget
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -188,6 +170,22 @@ class Ui_MainWindow(object):
             widget.jupyter_widget.kernel_manager.shutdown_kernel()
         self.tabWidget.removeTab(n)
 
+    def make_jupyter_widget_with_kernel(self):
+        """Start a kernel, connect to it, and create a RichJupyterWidget to use it
+        """
+        USE_KERNEL = 'python3'
+        kernel_manager = QtKernelManager(kernel_name=USE_KERNEL)
+        kernel_manager.start_kernel()
+
+        kernel_client = kernel_manager.client()
+        kernel_client.start_channels()
+
+        jupyter_widget = RichJupyterWidget()
+        jupyter_widget.kernel_manager = kernel_manager
+        jupyter_widget.kernel_client = kernel_client
+        jupyter_widget._display_banner = False
+        return jupyter_widget
+
     def add_python_tab(self):
         """Adds python tab to the tabWidget"""
         self.tab_python = QtWidgets.QWidget()
@@ -237,7 +235,7 @@ class Ui_MainWindow(object):
         self.tab_python.stopButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.tab_python.stopButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.tab_python.jupyter_widget = make_jupyter_widget_with_kernel()
+        self.tab_python.jupyter_widget = self.make_jupyter_widget_with_kernel()
         self.tab_python.jupyter_widget.setMaximumSize(QtCore.QSize(16777215, 192))
         self.verticalLayout.addWidget(self.tab_python.jupyter_widget)
         self.tabWidget.addTab(self.tab_python, "Python")
@@ -357,6 +355,7 @@ class Ui_MainWindow(object):
         """What happens when enter key is clicked"""
         if qKeyEvent.key() == QtCore.Qt.Key_Return:
             self.run_cmd_command()
+
             qKeyEvent.accept()
             return
         else:
@@ -364,14 +363,17 @@ class Ui_MainWindow(object):
             return QtWidgets.QTextEdit.keyPressEvent(widget.textEditCommands, qKeyEvent)
 
     def run_cmd_command(self):
-        widget = self.tabWidget.currentWidget()
-        command = widget.textEditCommands.toPlainText()
-        p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             shell=True)
-        output = p.communicate()[0].decode('utf-8')
-        text = widget.textEdit.toPlainText() + "\n>>>" + command + "\n" + output
-        widget.textEdit.setPlainText(text)
-        widget.textEditCommands.setPlainText("")
+        try:
+            widget = self.tabWidget.currentWidget()
+            command = widget.textEditCommands.toPlainText()
+            p = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                 shell=True)
+            output = p.communicate()[0].decode('utf-8')
+            text = widget.textEdit.toPlainText() + "\n>>>" + command + "\n" + output
+            widget.textEdit.setPlainText(text)
+            widget.textEditCommands.setPlainText("")
+        except:
+            pass
 
     def save_as_clicked(self):
         """Save as button is clicked"""

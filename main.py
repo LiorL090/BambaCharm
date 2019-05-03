@@ -53,12 +53,19 @@ class Ui_MainWindow(object):
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 995, 21))
         self.menubar.setObjectName("menubar")
+
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+
         self.menuSettings = QtWidgets.QMenu(self.menubar)
         self.menuSettings.setObjectName("menuSettings")
+
         self.menuEdit = QtWidgets.QMenu(self.menubar)
         self.menuEdit.setObjectName("menuEdit")
+
+        self.menuUser = QtWidgets.QMenu(self.menubar)
+        self.menuUser.setObjectName("menuUser")
+
         MainWindow.setMenuBar(self.menubar)
         # ber with basic operations
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -68,11 +75,11 @@ class Ui_MainWindow(object):
         self.toolBar.setObjectName("toolBar")
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         # actions that appears in the bars
-        self.actionNew = QtWidgets.QAction(MainWindow)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("icons/new file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionNew.setIcon(icon1)
-        self.actionNew.setObjectName("actionNew")
+        # self.actionNew = QtWidgets.QAction(MainWindow)
+        # icon1 = QtGui.QIcon()
+        # icon1.addPixmap(QtGui.QPixmap("icons/new file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        # self.actionNew.setIcon(icon1)
+        # self.actionNew.setObjectName("actionNew")
 
         self.actionOpen = QtWidgets.QAction(MainWindow)
         icon2 = QtGui.QIcon()
@@ -109,20 +116,28 @@ class Ui_MainWindow(object):
         icon6.addPixmap(QtGui.QPixmap("icons/python.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionpython.setIcon(icon6)
         self.actionpython.setObjectName("actionpython")
+
         self.actionGoogle = QtWidgets.QAction(MainWindow)
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap("icons/google.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionGoogle.setIcon(icon7)
         self.actionGoogle.setObjectName("actionGoogle")
+
+        self.actionLogIn = QtWidgets.QAction(MainWindow)
+        self.actionLogIn.setObjectName("actionLogIn")
+
         # add actions to the bars
-        self.menuFile.addAction(self.actionNew)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSaveAs)
+
+        self.menuUser.addAction(self.actionLogIn)
+
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
-        self.toolBar.addAction(self.actionNew)
+        self.menubar.addAction(self.menuUser.menuAction())
+        # self.toolBar.addAction(self.actionNew)
         self.toolBar.addAction(self.actionpython)
         self.toolBar.addAction(self.actionNew_Text_File)
         self.toolBar.addAction(self.actioncmd)
@@ -142,10 +157,11 @@ class Ui_MainWindow(object):
         """Sets titles and connects the buttons and actions to their functions"""
         MainWindow.setWindowTitle(_translate("MainWindow", "BambaCharm"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
+        self.menuUser.setTitle(_translate("MainWindow", "User"))
         self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
         self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
-        self.actionNew.setText(_translate("MainWindow", "New"))
+        # self.actionNew.setText(_translate("MainWindow", "New"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSaveAs.setText(_translate("MainWindow", "Save As"))
@@ -153,6 +169,8 @@ class Ui_MainWindow(object):
         self.actioncmd.setText(_translate("MainWindow", "cmd"))
         self.actionpython.setText(_translate("MainWindow", "python"))
         self.actionGoogle.setText(_translate("MainWindow", "Google"))
+        self.actionLogIn.setText(_translate("MainWindow", "Login"))
+
         self.tabWidget.tabCloseRequested.connect(self.close_my_tab)
         self.actionpython.triggered.connect(self.add_python_tab)
         self.actioncmd.triggered.connect(self.add_cmd_tab)
@@ -161,6 +179,7 @@ class Ui_MainWindow(object):
         self.actionSaveAs.triggered.connect(self.save_as_clicked)
         self.actionSave.triggered.connect(self.save_clicked)
         self.actionOpen.triggered.connect(self.open_clicked)
+        self.actionLogIn.triggered.connect(self.login_clicked)
 
     def close_my_tab(self, n):
         """Closes the tab"""
@@ -194,8 +213,8 @@ class Ui_MainWindow(object):
         self.tab_python.savable = True
         self.tab_python.path = ""
         self.tab_python.file_name = "Python"
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.tab_python)
-        self.verticalLayout.setObjectName("verticalLayout")
+        self.tab_python.verticalLayout = QtWidgets.QVBoxLayout(self.tab_python)
+        self.tab_python.verticalLayout.setObjectName("verticalLayout")
         self.tab_python.textEdit = QtWidgets.QTextEdit(self.tab_python)
         self.tab_python.textEdit.setMinimumSize(QtCore.QSize(0, 251))
         self.tab_python.textEdit.setObjectName("plainTextEdit")
@@ -211,10 +230,10 @@ class Ui_MainWindow(object):
         self.tab_python.textEdit.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
         self.tab_python.textEdit.setStyleSheet(
             "border-radius: 10px; border: 1px solid #cdcdcd; border-color: %s; font-size: 12pt; color: white; background-color: rgb(34, 34, 34);" % blue)
-        self.verticalLayout.addWidget(self.tab_python.textEdit)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.tab_python.verticalLayout.addWidget(self.tab_python.textEdit)
+        self.tab_python.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.tab_python.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.tab_python.horizontalLayout.setObjectName("horizontalLayout")
         self.tab_python.playButton = QtWidgets.QPushButton(self.tab_python)
         self.tab_python.playButton.setAutoFillBackground(False)
         self.tab_python.playButton.setText("")
@@ -224,7 +243,7 @@ class Ui_MainWindow(object):
         self.tab_python.playButton.setIconSize(QtCore.QSize(25, 25))
         self.tab_python.playButton.setFlat(True)
         self.tab_python.playButton.setObjectName("pushButton_2")
-        self.horizontalLayout.addWidget(self.tab_python.playButton)
+        self.tab_python.horizontalLayout.addWidget(self.tab_python.playButton)
         self.tab_python.stopButton = QtWidgets.QPushButton(self.tab_python)
         self.tab_python.stopButton.setText("")
         icon1 = QtGui.QIcon()
@@ -233,13 +252,14 @@ class Ui_MainWindow(object):
         self.tab_python.stopButton.setIconSize(QtCore.QSize(25, 25))
         self.tab_python.stopButton.setFlat(True)
         self.tab_python.stopButton.setObjectName("pushButton")
-        self.horizontalLayout.addWidget(self.tab_python.stopButton)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.tab_python.horizontalLayout.addWidget(self.tab_python.stopButton)
+        self.tab_python.verticalLayout.addLayout(self.tab_python.horizontalLayout)
         self.tab_python.jupyter_widget = self.make_jupyter_widget_with_kernel()
         self.tab_python.jupyter_widget.setMaximumSize(QtCore.QSize(16777215, 192))
-        self.verticalLayout.addWidget(self.tab_python.jupyter_widget)
+        self.tab_python.verticalLayout.addWidget(self.tab_python.jupyter_widget)
         self.tabWidget.addTab(self.tab_python, "Python")
         self.tab_python.playButton.clicked.connect(self.python_run_clicked)
+        self.tab_python.stopButton.clicked.connect(self.python_stop_clicked)
         return self.tab_python
 
     def add_cmd_commands_tab(self):
@@ -399,8 +419,8 @@ class Ui_MainWindow(object):
                         file.close()
                         self.tabWidget.setTabText(self.tabWidget.indexOf(widget),
                                                   _translate("MainWindow", widget.file_name))
-                    except Exception as error:
-                        print('Caught this error: ' + repr(error))
+                    except:
+                        pass
 
     def save_clicked(self):
         """Save button is clicked"""
@@ -412,8 +432,8 @@ class Ui_MainWindow(object):
                     text = widget.textEdit.toPlainText()
                     file.write(text)
                     file.close()
-                except Exception as error:
-                    print('Caught this error: ' + repr(error))
+                except:
+                    pass
 
     def open_clicked(self):
         """Open button is clicked"""
@@ -454,11 +474,69 @@ class Ui_MainWindow(object):
     def python_run_clicked(self):
         """run button in python tab clicked"""
         widget = self.tabWidget.currentWidget()
-        p = subprocess.Popen(["python", widget.path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in p.stdout:
-            line = line.decode('utf-8')
-            line = widget.textBrowser.toPlainText() + line
-            widget.textBrowser.setPlainText(line)
+        command = "run " + widget.path
+        if widget.path == "":
+            command = "Make sure you have saved the script file"
+        widget.jupyter_widget.execute(source=command)
+
+    def python_stop_clicked(self):
+        """run button in python tab clicked"""
+        widget = self.tabWidget.currentWidget()
+        widget.jupyter_widget.reset("")
+
+    def login_widget_create(self):
+        """Creates login widget"""
+        self.login_widget = QtWidgets.QWidget()
+        self.login_widget.verticalLayout = QtWidgets.QVBoxLayout(self.login_widget)
+        self.login_widget.setFixedSize(QtCore.QSize(300, 300))
+        self.login_widget.setWindowTitle(_translate("MainWindow", "Login"))
+        self.login_widget.setAutoFillBackground(True)
+
+        oImage = QtGui.QImage("icons\login_back.png")
+        sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
+        palette = QtGui.QPalette()
+        palette.setBrush(10, QtGui.QBrush(sImage))  # 10 = Windowrole
+        self.login_widget.setPalette(palette)
+
+        self.login_widget.label = QtWidgets.QLabel(self.login_widget)
+        self.login_widget.label.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.login_widget.label.setText("Login please")
+
+        self.login_widget.hLayout1 = QtWidgets.QHBoxLayout()
+        self.login_widget.lineEditUser = QtWidgets.QLineEdit()
+        self.login_widget.labelU = QtWidgets.QLabel()
+        self.login_widget.labelU.setMaximumSize(QtCore.QSize(50, 20))
+        self.login_widget.labelU.setText("Username:")
+        self.login_widget.hLayout1.addWidget(self.login_widget.labelU)
+        self.login_widget.hLayout1.addWidget(self.login_widget.lineEditUser)
+
+        self.login_widget.hLayout2 = QtWidgets.QHBoxLayout()
+        self.login_widget.lineEditPass = QtWidgets.QLineEdit()
+        self.login_widget.labelP = QtWidgets.QLabel()
+        self.login_widget.labelP.setMaximumSize(QtCore.QSize(50, 20))
+        self.login_widget.labelP.setText("Password:")
+        self.login_widget.hLayout2.addWidget(self.login_widget.labelP)
+        self.login_widget.hLayout2.addWidget(self.login_widget.lineEditPass)
+
+        self.login_widget.button = QtWidgets.QPushButton(self.login_widget)
+        self.login_widget.button.setText("Login")
+        self.login_widget.button.clicked.connect(self.login_to_server)
+
+        self.login_widget.verticalLayout.addWidget(self.login_widget.label)
+        self.login_widget.verticalLayout.addLayout(self.login_widget.hLayout1)
+        self.login_widget.verticalLayout.addLayout(self.login_widget.hLayout2)
+        self.login_widget.verticalLayout.addWidget(self.login_widget.button)
+
+        return self.login_widget
+
+    def login_clicked(self):
+        """when login button clicked open the login widget"""
+        widget = self.login_widget_create()
+        widget.show()
+
+    def login_to_server(self):
+        """when user want to log in to server send request to server"""
+        self.login_widget.label.setText("5")
 
 
 if __name__ == "__main__":

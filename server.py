@@ -19,44 +19,69 @@ class Client_socket():
 
 def old_user(current_socket, mesage):
     """ logging old users (user authentication) """
-    match = re.search(r'old_user ([\w.-]+) ([\w.-]+)', mesage)
-    if match:
-        user_name = match.group(1)
-        password = match.group(2)
+    mesage = mesage.split(" ")
+    if len(mesage) == 3:
+        user_name = mesage[1]
+        password = mesage[2]
 
-        print(user_name + " " + password)
-
-        db = sqlite3.connect('users')
-        cursor = db.cursor()
-        cursor.execute('''SELECT name, password FROM users WHERE name=?''', (user_name,))
-        data = cursor.fetchone()
-        if data is None:
-            messages_to_send.append((current_socket, "Couldn't find your BambaCharm Account"))
-        elif data[1] == password:
-            messages_to_send.append((current_socket, "successful login"))
-            client = Client_socket(user_name, current_socket)
-            logged_users[current_socket] = client
+        if len(user_name) <= 15:
+            db = sqlite3.connect('users')
+            cursor = db.cursor()
+            cursor.execute('''SELECT name, password FROM users WHERE name=?''', (user_name,))
+            data = cursor.fetchone()
+            if data is None:
+                messages_to_send.append((current_socket, "Couldn't find your BambaCharm Account"))
+            elif data[1] == password:
+                messages_to_send.append((current_socket, "successful login"))
+                client = Client_socket(user_name, current_socket)
+                logged_users[current_socket] = client
+            else:
+                messages_to_send.append((current_socket, "wrong password"))
         else:
-            messages_to_send.append((current_socket, "wrong password"))
+            messages_to_send.append((current_socket, "Couldn't find your BambaCharm Account"))
+    else:
+        messages_to_send.append((current_socket, "wrong username or password"))
 
 
 def new_user(current_socket, mesage):
     """ creating account for new users (user registration)"""
 
-    match = re.search(r'([\w.-]+)@([\w.-]+)', mesage)
-    if match:
-        user_name = match.group(1)
-        password = match.group(2)
+    mesage = mesage.split(" ")
+    if len(mesage) == 3:
+        user_name = mesage[1]
+        password = mesage[2]
+        if len(user_name) <= 15:
+            db = sqlite3.connect('users')
+            cursor = db.cursor()
+            cursor.execute('''SELECT name  FROM users WHERE name=?''', (user_name,))
+            data = cursor.fetchone()
+            if data is None:
+                email = mesage[3]
+                match = re.fullmatch(r'[^@]+@[^@]+\.[^@]+', email)
+                if match:
+                    email = match.group()  ## 'alice-b@google.com'
 
-        db = sqlite3.connect('users')
-        cursor = db.cursor()
-        cursor.execute('''INSERT INTO users(name, password)
-                          VALUES(?,?)''', (user_name, password))
-        db.commit()
+                    cursor.execute('''INSERT INTO users(name, password, email)
+                                      VALUES(?,?)''', (user_name, password, email))
+                    db.commit()
+
+                    messages_to_send.append((current_socket, "successful registration"))
+                    client = Client_socket(user_name, current_socket)
+                    logged_users[current_socket] = client
+
+                else:
+                    messages_to_send.append((current_socket, "wrong email"))
+            else:
+                messages_to_send.append((current_socket, "username already exist"))
+        else:
+            messages_to_send.append((current_socket, "Password should be no longer than 15 symbols"))
+    else:
+        messages_to_send.append((current_socket, "wrong username or password"))
 
 
 def handle_client(current_socket, mesage):
     """handles client requests"""
+    pass
 
 
 def send_waiting_messages(wlist):
@@ -68,13 +93,14 @@ def send_waiting_messages(wlist):
 
 
 while True:
-    rlist, wlist, xlist = select.select([server_socket] + open_client_sockets, open_client_sockets, [])
-    for current_socket in rlist:
-        if current_socket is server_socket:
-            (new_socket, address) = server_socket.accept()
-            open_client_sockets.append(new_socket)
-        else:
-            try:
+    try:
+        rlist, wlist, xlist = select.select([server_socket] + open_client_sockets, open_client_sockets, [])
+        for current_socket in rlist:
+            if current_socket is server_socket:
+                (new_socket, address) = server_socket.accept()
+                open_client_sockets.append(new_socket)
+            else:
+
                 data = current_socket.recv(1024)
                 mesage = data.decode('utf-8')
                 if mesage.startswith("old_user"):
@@ -85,6 +111,6 @@ while True:
                     handle_client(current_socket, mesage)
                 else:
                     open_client_sockets.remove(current_socket)
-            except:
-                pass
-    send_waiting_messages(wlist)
+        send_waiting_messages(wlist)
+    except:
+        pass

@@ -9,6 +9,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import re
 import subprocess
+import socket
 
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.manager import QtKernelManager
@@ -126,12 +127,22 @@ class Ui_MainWindow(object):
         self.actionLogIn = QtWidgets.QAction(MainWindow)
         self.actionLogIn.setObjectName("actionLogIn")
 
+        self.actionSignIn = QtWidgets.QAction(MainWindow)
+        self.actionSignIn.setObjectName("actionSignIn")
+
+        self.actionLogOut = QtWidgets.QAction(MainWindow)
+        self.actionLogOut.setObjectName("actionLogOut")
+
+        self.actionDelete = QtWidgets.QAction(MainWindow)
+        self.actionDelete.setObjectName("actionDelete")
+
         # add actions to the bars
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSaveAs)
 
         self.menuUser.addAction(self.actionLogIn)
+        self.menuUser.addAction(self.actionSignIn)
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuSettings.menuAction())
@@ -170,6 +181,9 @@ class Ui_MainWindow(object):
         self.actionpython.setText(_translate("MainWindow", "python"))
         self.actionGoogle.setText(_translate("MainWindow", "Google"))
         self.actionLogIn.setText(_translate("MainWindow", "Login"))
+        self.actionSignIn.setText(_translate("MainWindow", "Sign In"))
+        self.actionLogOut.setText(_translate("MainWindow", "Log out"))
+        self.actionDelete.setText(_translate("MainWindow", "Delete account"))
 
         self.tabWidget.tabCloseRequested.connect(self.close_my_tab)
         self.actionpython.triggered.connect(self.add_python_tab)
@@ -180,6 +194,9 @@ class Ui_MainWindow(object):
         self.actionSave.triggered.connect(self.save_clicked)
         self.actionOpen.triggered.connect(self.open_clicked)
         self.actionLogIn.triggered.connect(self.login_clicked)
+        self.actionSignIn.triggered.connect(self.signin_clicked)
+        self.actionLogOut.triggered.connect(self.logout_clicked)
+        self.actionDelete.triggered.connect(self.delete_clicked)
 
     def close_my_tab(self, n):
         """Closes the tab"""
@@ -501,6 +518,9 @@ class Ui_MainWindow(object):
         self.login_widget.label = QtWidgets.QLabel(self.login_widget)
         self.login_widget.label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.login_widget.label.setText("Login please")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.login_widget.label.setFont(font)
 
         self.login_widget.hLayout1 = QtWidgets.QHBoxLayout()
         self.login_widget.lineEditUser = QtWidgets.QLineEdit()
@@ -535,8 +555,174 @@ class Ui_MainWindow(object):
         widget.show()
 
     def login_to_server(self):
-        """when user want to log in to server send request to server"""
-        self.login_widget.label.setText("5")
+        try:
+            """when user want to log in to server send request to server"""
+            username = self.login_widget.lineEditUser.text()
+            password = self.login_widget.lineEditPass.text()
+            message = "old_user " + username + " " + password
+            self.my_socket = socket.socket()
+            self.my_socket.connect(("127.0.0.1", 8820))
+            self.my_socket.send(message.encode('utf-8'))
+            data = self.my_socket.recv(1024)
+            data = data.decode('utf-8')
+            self.login_widget.label.setText(data)
+            if data == "successful login":
+                self.login_widget.close()
+                self.menuUser.removeAction(self.actionLogIn)
+                self.menuUser.removeAction(self.actionSignIn)
+                self.menuUser.addAction(self.actionLogOut)
+                self.menuUser.addAction(self.actionDelete)
+        except:
+            self.login_widget.label.setText("Server is not responding")
+
+    def logout_clicked(self):
+        """when user wants to disconnect"""
+        try:
+            message = "req logout"
+            self.my_socket.send(message.encode('utf-8'))
+        except:
+            pass
+        self.menuUser.removeAction(self.actionLogOut)
+        self.menuUser.removeAction(self.actionDelete)
+        self.menuUser.addAction(self.actionLogIn)
+        self.menuUser.addAction(self.actionSignIn)
+
+    def signin_widget_create(self):
+        """Creates sign in widget"""
+        self.signin_widget = QtWidgets.QWidget()
+        self.signin_widget.verticalLayout = QtWidgets.QVBoxLayout(self.signin_widget)
+        self.signin_widget.setFixedSize(QtCore.QSize(300, 300))
+        self.signin_widget.setWindowTitle(_translate("MainWindow", "Sign In"))
+        self.signin_widget.setAutoFillBackground(True)
+
+        oImage = QtGui.QImage("icons\signin_back.jpg")
+        sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
+        palette = QtGui.QPalette()
+        palette.setBrush(10, QtGui.QBrush(sImage))  # 10 = Windowrole
+        self.signin_widget.setPalette(palette)
+
+        self.signin_widget.label = QtWidgets.QLabel(self.signin_widget)
+        self.signin_widget.label.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.signin_widget.label.setText("Login please")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.signin_widget.label.setFont(font)
+
+        self.signin_widget.hLayout1 = QtWidgets.QHBoxLayout()
+        self.signin_widget.lineEditUser = QtWidgets.QLineEdit()
+        self.signin_widget.labelU = QtWidgets.QLabel()
+        self.signin_widget.labelU.setMaximumSize(QtCore.QSize(50, 20))
+        self.signin_widget.labelU.setText("Username:")
+        self.signin_widget.hLayout1.addWidget(self.signin_widget.labelU)
+        self.signin_widget.hLayout1.addWidget(self.signin_widget.lineEditUser)
+
+        self.signin_widget.hLayout2 = QtWidgets.QHBoxLayout()
+        self.signin_widget.lineEditPass = QtWidgets.QLineEdit()
+        self.signin_widget.labelP = QtWidgets.QLabel()
+        self.signin_widget.labelP.setMaximumSize(QtCore.QSize(50, 20))
+        self.signin_widget.labelP.setText("Password:")
+        self.signin_widget.hLayout2.addWidget(self.signin_widget.labelP)
+        self.signin_widget.hLayout2.addWidget(self.signin_widget.lineEditPass)
+
+        self.signin_widget.hLayout3 = QtWidgets.QHBoxLayout()
+        self.signin_widget.lineEditEmail = QtWidgets.QLineEdit()
+        self.signin_widget.labelE = QtWidgets.QLabel()
+        self.signin_widget.labelE.setMaximumSize(QtCore.QSize(50, 20))
+        self.signin_widget.labelE.setText("Password:")
+        self.signin_widget.hLayout3.addWidget(self.signin_widget.labelE)
+        self.signin_widget.hLayout3.addWidget(self.signin_widget.lineEditEmail)
+
+        self.signin_widget.button = QtWidgets.QPushButton(self.signin_widget)
+        self.signin_widget.button.setText("Login")
+        self.signin_widget.button.clicked.connect(self.signin_to_server)
+
+        self.signin_widget.verticalLayout.addWidget(self.signin_widget.label)
+        self.signin_widget.verticalLayout.addLayout(self.signin_widget.hLayout1)
+        self.signin_widget.verticalLayout.addLayout(self.signin_widget.hLayout2)
+        self.signin_widget.verticalLayout.addLayout(self.signin_widget.hLayout3)
+        self.signin_widget.verticalLayout.addWidget(self.signin_widget.button)
+
+        return self.signin_widget
+
+    def signin_clicked(self):
+        """when sign in button clicked open the login widget"""
+        widget = self.signin_widget_create()
+        widget.show()
+
+    def signin_to_server(self):
+        try:
+            """when user want to sign in to server send request to server"""
+            username = self.signin_widget.lineEditUser.text()
+            password = self.signin_widget.lineEditPass.text()
+            email = self.signin_widget.lineEditEmail.text()
+            message = "new_user " + username + " " + password + " " + email
+            self.my_socket = socket.socket()
+            self.my_socket.connect(("127.0.0.1", 8820))
+            self.my_socket.send(message.encode('utf-8'))
+            data = self.my_socket.recv(1024)
+            data = data.decode('utf-8')
+            self.signin_widget.label.setText(data)
+            if data == "successful registration":
+                self.signin_widget.close()
+                self.menuUser.removeAction(self.actionLogIn)
+                self.menuUser.removeAction(self.actionSignIn)
+                self.menuUser.addAction(self.actionLogOut)
+                self.menuUser.addAction(self.actionDelete)
+        except:
+            self.signin_widget.label.setText("Server is not responding")
+
+    def delete_clicked(self):
+        """when delete is clicked"""
+        widget = self.create_confirmation_widget()
+        widget.show()
+
+    def delete_account(self):
+        """when user wants to delete his account"""
+        try:
+            message = "req delete"
+            self.my_socket.send(message.encode('utf-8'))
+        except:
+            pass
+        self.confirmation_widget.close()
+        self.menuUser.removeAction(self.actionLogOut)
+        self.menuUser.removeAction(self.actionDelete)
+        self.menuUser.addAction(self.actionLogIn)
+        self.menuUser.addAction(self.actionSignIn)
+
+    def create_confirmation_widget(self):
+        """Creates confirmation widget"""
+        self.confirmation_widget = QtWidgets.QWidget()
+        self.confirmation_widget.verticalLayout = QtWidgets.QVBoxLayout(self.confirmation_widget)
+        self.confirmation_widget.setFixedSize(QtCore.QSize(400, 100))
+        self.confirmation_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
+        self.confirmation_widget.setAutoFillBackground(True)
+
+        self.confirmation_widget.label = QtWidgets.QLabel(self.confirmation_widget)
+        self.confirmation_widget.label.setText("Are you sure you want to delete your Bambacharm account?")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.confirmation_widget.label.setFont(font)
+
+        self.confirmation_widget.hLayout1 = QtWidgets.QHBoxLayout()
+        self.confirmation_widget.button_yes = QtWidgets.QPushButton(self.confirmation_widget)
+        self.confirmation_widget.button_yes.setText("Yes")
+        self.confirmation_widget.button_yes.clicked.connect(self.delete_account)
+        self.confirmation_widget.button_no = QtWidgets.QPushButton(self.confirmation_widget)
+        self.confirmation_widget.button_no.setText("No")
+        self.confirmation_widget.button_no.clicked.connect(self.confirmation_denied)
+        self.confirmation_widget.hLayout1.addWidget(self.confirmation_widget.button_yes)
+        self.confirmation_widget.hLayout1.addWidget(self.confirmation_widget.button_no)
+
+        self.confirmation_widget.verticalLayout.addWidget(self.confirmation_widget.label)
+        self.confirmation_widget.verticalLayout.addLayout(self.confirmation_widget.hLayout1)
+
+        return self.confirmation_widget
+
+    def confirmation_denied(self):
+        """user clicks no and don't confirm his action"""
+        self.confirmation_widget.close()
+
+
 
 
 if __name__ == "__main__":

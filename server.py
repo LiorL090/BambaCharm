@@ -2,6 +2,9 @@ import socket
 import select
 import sqlite3
 import re
+import os
+import shutil
+import pickle
 
 server_socket = socket.socket()
 server_socket.bind(("0.0.0.0", 8820))
@@ -66,6 +69,7 @@ def new_user(current_socket, message):
                     messages_to_send.append((current_socket, "successful registration"))
                     client = Client_socket(user_name, current_socket)
                     logged_users[current_socket] = client
+                    os.mkdir("storage/%s" % user_name)
 
                 else:
                     messages_to_send.append((current_socket, "wrong email"))
@@ -80,12 +84,12 @@ def new_user(current_socket, message):
 def handle_client(current_socket, message):
     """handles client requests"""
     message = message.split(" ")
-    if 1 < len(message) < 4:
+    name = logged_users[current_socket].user_name
+    if 1 < len(message):
         if message[1] == "logout":
             logged_users.pop(current_socket)
 
         if message[1] == "delete":
-            name = logged_users[current_socket].user_name
             cursor.execute('''SELECT name  FROM users WHERE name=?''', (name,))
             data = cursor.fetchone()
             if data is not None:
@@ -94,6 +98,28 @@ def handle_client(current_socket, message):
                 WHERE name = "%s";
                  ''' % name)
                 db.commit()
+                shutil.rmtree("storage/%s" % name)
+
+        if message[1] == "listDir":
+            list = os.listdir("storage/%s" % name)
+            data = pickle.dumps(list)
+            messages_to_send.append((current_socket, data))
+
+        if message[1] == "deleteFile":
+            file_name = ' '.join(map(str, message[2:]))
+            file_path = "storage/" + name + "/" + file_name
+            if len(file_name) != 0:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+        if message[1] == "giveFile":
+            file_path = "storage/" + name + "/" + message[2:]
+            print(file_path)
+            if file_path:
+                print(file_path)
+                if os.path.exists(file_path):
+                    print(file_path)
+                    shutil.rmtree(file_path)
 
 
 def send_waiting_messages(wlist):
@@ -101,7 +127,9 @@ def send_waiting_messages(wlist):
         for message in messages_to_send:
             (client_socket, data) = message
             if client_socket in wlist:
-                client_socket.send(data.encode('utf-8'))
+                if isinstance(data, str):
+                    data = data.encode('utf-8')
+                client_socket.sendall(data)
                 messages_to_send.remove(message)
     except:
         pass

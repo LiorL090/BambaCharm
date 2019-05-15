@@ -10,6 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import re
 import subprocess
 import socket
+import pickle
 
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.manager import QtKernelManager
@@ -58,11 +59,11 @@ class Ui_MainWindow(object):
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
 
-        self.menuSettings = QtWidgets.QMenu(self.menubar)
-        self.menuSettings.setObjectName("menuSettings")
-
-        self.menuEdit = QtWidgets.QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
+        # self.menuSettings = QtWidgets.QMenu(self.menubar)
+        # self.menuSettings.setObjectName("menuSettings")
+        #
+        # self.menuEdit = QtWidgets.QMenu(self.menubar)
+        # self.menuEdit.setObjectName("menuEdit")
 
         self.menuUser = QtWidgets.QMenu(self.menubar)
         self.menuUser.setObjectName("menuUser")
@@ -125,16 +126,34 @@ class Ui_MainWindow(object):
         self.actionGoogle.setObjectName("actionGoogle")
 
         self.actionLogIn = QtWidgets.QAction(MainWindow)
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap("icons/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionLogIn.setIcon(icon8)
         self.actionLogIn.setObjectName("actionLogIn")
 
         self.actionSignIn = QtWidgets.QAction(MainWindow)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap("icons/signin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSignIn.setIcon(icon9)
         self.actionSignIn.setObjectName("actionSignIn")
 
         self.actionLogOut = QtWidgets.QAction(MainWindow)
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap("icons/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionLogOut.setIcon(icon10)
         self.actionLogOut.setObjectName("actionLogOut")
 
         self.actionDelete = QtWidgets.QAction(MainWindow)
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap("icons/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionDelete.setIcon(icon11)
         self.actionDelete.setObjectName("actionDelete")
+
+        self.actionMyFiles = QtWidgets.QAction(MainWindow)
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap("icons/cloud.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionMyFiles.setIcon(icon12)
+        self.actionMyFiles.setObjectName("actionMyFiles")
 
         # add actions to the bars
         self.menuFile.addAction(self.actionOpen)
@@ -145,20 +164,14 @@ class Ui_MainWindow(object):
         self.menuUser.addAction(self.actionSignIn)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuSettings.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
+        # self.menubar.addAction(self.menuSettings.menuAction())
+        # self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuUser.menuAction())
         # self.toolBar.addAction(self.actionNew)
         self.toolBar.addAction(self.actionpython)
         self.toolBar.addAction(self.actionNew_Text_File)
         self.toolBar.addAction(self.actioncmd)
         self.toolBar.addAction(self.actionGoogle)
-
-        # self.action_enter_pressed = QtWidgets.QAction(MainWindow)
-        # self.action_enter_pressed.setShortcut(QtCore.Qt.Key_Return)
-        # self.tabWidget.addAction(self.action_enter_pressed)
-        # self.action_enter_pressed.triggered.connect(self.add_text_tab)
-        # MainWindow.keyPressEvent = self.newOnkeyPressEvent
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
@@ -168,9 +181,9 @@ class Ui_MainWindow(object):
         """Sets titles and connects the buttons and actions to their functions"""
         MainWindow.setWindowTitle(_translate("MainWindow", "BambaCharm"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuUser.setTitle(_translate("MainWindow", "User"))
-        self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
-        self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
+        self.menuUser.setTitle(_translate("MainWindow", "Bamba Cloud"))
+        # self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
+        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
         # self.actionNew.setText(_translate("MainWindow", "New"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
@@ -184,6 +197,7 @@ class Ui_MainWindow(object):
         self.actionSignIn.setText(_translate("MainWindow", "Sign In"))
         self.actionLogOut.setText(_translate("MainWindow", "Log out"))
         self.actionDelete.setText(_translate("MainWindow", "Delete account"))
+        self.actionMyFiles.setText(_translate("MainWindow", "My files"))
 
         self.tabWidget.tabCloseRequested.connect(self.close_my_tab)
         self.actionpython.triggered.connect(self.add_python_tab)
@@ -197,6 +211,7 @@ class Ui_MainWindow(object):
         self.actionSignIn.triggered.connect(self.signin_clicked)
         self.actionLogOut.triggered.connect(self.logout_clicked)
         self.actionDelete.triggered.connect(self.delete_clicked)
+        self.actionMyFiles.triggered.connect(self.myfiles_clicked)
 
     def close_my_tab(self, n):
         """Closes the tab"""
@@ -485,8 +500,8 @@ class Ui_MainWindow(object):
                     tab.textEdit.setPlainText(text)
                     file.close()
 
-            except Exception as error:
-                print('Caught this error: ' + repr(error))
+            except:
+                pass
 
     def python_run_clicked(self):
         """run button in python tab clicked"""
@@ -508,6 +523,9 @@ class Ui_MainWindow(object):
         self.login_widget.setFixedSize(QtCore.QSize(300, 300))
         self.login_widget.setWindowTitle(_translate("MainWindow", "Login"))
         self.login_widget.setAutoFillBackground(True)
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap("icons/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.login_widget.setWindowIcon(icon8)
 
         oImage = QtGui.QImage("icons\login_back.png")
         sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
@@ -555,8 +573,8 @@ class Ui_MainWindow(object):
         widget.show()
 
     def login_to_server(self):
+        """when user want to log in to server send request to server"""
         try:
-            """when user want to log in to server send request to server"""
             username = self.login_widget.lineEditUser.text()
             password = self.login_widget.lineEditPass.text()
             message = "old_user " + username + " " + password
@@ -570,6 +588,8 @@ class Ui_MainWindow(object):
                 self.login_widget.close()
                 self.menuUser.removeAction(self.actionLogIn)
                 self.menuUser.removeAction(self.actionSignIn)
+                self.menuUser.addAction(self.actionMyFiles)
+                self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
         except:
@@ -582,6 +602,7 @@ class Ui_MainWindow(object):
             self.my_socket.send(message.encode('utf-8'))
         except:
             pass
+        self.menuUser.removeAction(self.actionMyFiles)
         self.menuUser.removeAction(self.actionLogOut)
         self.menuUser.removeAction(self.actionDelete)
         self.menuUser.addAction(self.actionLogIn)
@@ -594,6 +615,9 @@ class Ui_MainWindow(object):
         self.signin_widget.setFixedSize(QtCore.QSize(300, 300))
         self.signin_widget.setWindowTitle(_translate("MainWindow", "Sign In"))
         self.signin_widget.setAutoFillBackground(True)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap("icons/signin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.signin_widget.setWindowIcon(icon9)
 
         oImage = QtGui.QImage("icons\signin_back.jpg")
         sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
@@ -650,8 +674,8 @@ class Ui_MainWindow(object):
         widget.show()
 
     def signin_to_server(self):
+        """when user want to sign in to server send request to server"""
         try:
-            """when user want to sign in to server send request to server"""
             username = self.signin_widget.lineEditUser.text()
             password = self.signin_widget.lineEditPass.text()
             email = self.signin_widget.lineEditEmail.text()
@@ -666,6 +690,8 @@ class Ui_MainWindow(object):
                 self.signin_widget.close()
                 self.menuUser.removeAction(self.actionLogIn)
                 self.menuUser.removeAction(self.actionSignIn)
+                self.menuUser.addAction(self.actionMyFiles)
+                self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
         except:
@@ -684,6 +710,7 @@ class Ui_MainWindow(object):
         except:
             pass
         self.confirmation_widget.close()
+        self.menuUser.removeAction(self.actionMyFiles)
         self.menuUser.removeAction(self.actionLogOut)
         self.menuUser.removeAction(self.actionDelete)
         self.menuUser.addAction(self.actionLogIn)
@@ -696,6 +723,9 @@ class Ui_MainWindow(object):
         self.confirmation_widget.setFixedSize(QtCore.QSize(400, 100))
         self.confirmation_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
         self.confirmation_widget.setAutoFillBackground(True)
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap("icons/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.confirmation_widget.setWindowIcon(icon11)
 
         self.confirmation_widget.label = QtWidgets.QLabel(self.confirmation_widget)
         self.confirmation_widget.label.setText("Are you sure you want to delete your Bambacharm account?")
@@ -721,6 +751,77 @@ class Ui_MainWindow(object):
     def confirmation_denied(self):
         """user clicks no and don't confirm his action"""
         self.confirmation_widget.close()
+
+    def myfiles_clicked(self):
+        """creates window with list of all storage files"""
+        widget = self.create_myfiles_widget()
+        widget.show()
+
+    def get_files_list(self):
+        try:
+            message = "req listDir"
+            self.my_socket.send(message.encode('utf-8'))
+            data = self.my_socket.recv(1024)
+            data = pickle.loads(data)
+            return data
+        except:
+            pass
+        return []
+
+    def create_myfiles_widget(self):
+        """Creates myfiles widget"""
+        files_list = self.get_files_list()
+
+        self.myfiles_widget = QtWidgets.QWidget()
+        self.myfiles_widget.verticalLayout = QtWidgets.QVBoxLayout(self.myfiles_widget)
+        self.myfiles_widget.setFixedSize(QtCore.QSize(200, 300))
+        self.myfiles_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
+        self.myfiles_widget.setAutoFillBackground(True)
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap("icons/cloud.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.myfiles_widget.setWindowIcon(icon12)
+
+        self.myfiles_widget.list = QtWidgets.QListWidget(self.myfiles_widget)
+        self.myfiles_widget.list.setStyleSheet("background-color: rgb(224, 155, 76);")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.myfiles_widget.list.setFont(font)
+        for item in files_list:
+            self.myfiles_widget.list.addItem(str(item))
+
+        self.myfiles_widget.hLayout1 = QtWidgets.QHBoxLayout()
+        self.myfiles_widget.button_open = QtWidgets.QPushButton(self.myfiles_widget)
+        self.myfiles_widget.button_open.setText("Open")
+        self.myfiles_widget.button_open.clicked.connect(self.open_server_file)
+        self.myfiles_widget.button_delete = QtWidgets.QPushButton(self.myfiles_widget)
+        self.myfiles_widget.button_delete.setText("Delete")
+        self.myfiles_widget.button_delete.clicked.connect(self.delete_server_file)
+        self.myfiles_widget.hLayout1.addWidget(self.myfiles_widget.button_open)
+        self.myfiles_widget.hLayout1.addWidget(self.myfiles_widget.button_delete)
+
+        self.myfiles_widget.verticalLayout.addWidget(self.myfiles_widget.list)
+        self.myfiles_widget.verticalLayout.addLayout(self.myfiles_widget.hLayout1)
+
+        return self.myfiles_widget
+
+    def open_server_file(self):
+        """send request to server to get certain file"""
+        item = self.myfiles_widget.list.selectedItems()
+        if len(item) != 0:
+            file_name = item[0].text()
+
+    def delete_server_file(self):
+        """send request to server to delete certain file"""
+        try:
+            items = self.myfiles_widget.list.selectedItems()
+            if items:
+                for item in items:
+                    file_name = item.text()
+                    self.myfiles_widget.list.takeItem(self.myfiles_widget.list.row(item))
+                    message = "req deleteFile " + file_name
+                    self.my_socket.send(message.encode('utf-8'))
+        except:
+            pass
 
 
 

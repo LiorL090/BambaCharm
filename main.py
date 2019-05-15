@@ -824,8 +824,6 @@ class Ui_MainWindow(object):
             pass
 
 
-
-
 if __name__ == "__main__":
     import sys
 

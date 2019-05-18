@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'CodeHeaven.ui'
-#
-# Created by: PyQt5 UI code generator 5.11.3
-#
-# WARNING! All changes made in this file will be lost!
-
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import re
 import subprocess
 import socket
 import pickle
+import nacl.utils
+from nacl.public import PrivateKey, Box
 
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.manager import QtKernelManager
@@ -567,6 +561,21 @@ class Ui_MainWindow(object):
 
         return self.login_widget
 
+    def send_and_receive_encrypted(self, message):
+        """ Encrypts and sends the given message, gets server response decrypts and returns it"""
+        encrypted = self.my_box.encrypt(message.encode('utf-8'))
+        self.my_socket.send(encrypted)
+        data = self.my_socket.recv(1024)
+        plaintext = self.my_box.decrypt(data)
+        return plaintext
+
+    def send_encrypted(self, message):
+        """ Encrypts and sends the given message, gets server response decrypts and returns it"""
+        encrypted = self.my_box.encrypt(message.encode('utf-8'))
+        self.my_socket.send(encrypted)
+
+
+
     def login_clicked(self):
         """when login button clicked open the login widget"""
         widget = self.login_widget_create()
@@ -580,9 +589,17 @@ class Ui_MainWindow(object):
             message = "old_user " + username + " " + password
             self.my_socket = socket.socket()
             self.my_socket.connect(("127.0.0.1", 8820))
-            self.my_socket.send(message.encode('utf-8'))
-            data = self.my_socket.recv(1024)
-            data = data.decode('utf-8')
+
+            # Generates keys and box for encrypted communication with the server
+            sk_client = PrivateKey.generate()
+            pk_client = sk_client.public_key
+            self.my_socket.send(pickle.dumps(pk_client))
+            pk_server = self.my_socket.recv(1024)
+            pk_server = pickle.loads(pk_server)
+            self.my_box = Box(sk_client, pk_server)
+
+            data = self.send_and_receive_encrypted(message).decode('utf-8')
+
             self.login_widget.label.setText(data)
             if data == "successful login":
                 self.login_widget.close()
@@ -592,14 +609,15 @@ class Ui_MainWindow(object):
                 self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
-        except:
+        except Exception as ex:
+            print(ex.args)
             self.login_widget.label.setText("Server is not responding")
 
     def logout_clicked(self):
         """when user wants to disconnect"""
         try:
             message = "req logout"
-            self.my_socket.send(message.encode('utf-8'))
+            self.send_encrypted(message)
         except:
             pass
         self.menuUser.removeAction(self.actionMyFiles)
@@ -652,7 +670,7 @@ class Ui_MainWindow(object):
         self.signin_widget.lineEditEmail = QtWidgets.QLineEdit()
         self.signin_widget.labelE = QtWidgets.QLabel()
         self.signin_widget.labelE.setMaximumSize(QtCore.QSize(50, 20))
-        self.signin_widget.labelE.setText("Password:")
+        self.signin_widget.labelE.setText("Email:   ")
         self.signin_widget.hLayout3.addWidget(self.signin_widget.labelE)
         self.signin_widget.hLayout3.addWidget(self.signin_widget.lineEditEmail)
 
@@ -682,9 +700,17 @@ class Ui_MainWindow(object):
             message = "new_user " + username + " " + password + " " + email
             self.my_socket = socket.socket()
             self.my_socket.connect(("127.0.0.1", 8820))
-            self.my_socket.send(message.encode('utf-8'))
-            data = self.my_socket.recv(1024)
-            data = data.decode('utf-8')
+
+            # Generates keys and box for encrypted communication with the server
+            sk_client = PrivateKey.generate()
+            pk_client = sk_client.public_key
+            self.my_socket.send(pickle.dumps(pk_client))
+            pk_server = self.my_socket.recv(1024)
+            pk_server = pickle.loads(pk_server)
+            self.my_box = Box(sk_client, pk_server)
+
+            data = self.send_and_receive_encrypted(message).decode('utf-8')
+
             self.signin_widget.label.setText(data)
             if data == "successful registration":
                 self.signin_widget.close()
@@ -706,7 +732,7 @@ class Ui_MainWindow(object):
         """when user wants to delete his account"""
         try:
             message = "req delete"
-            self.my_socket.send(message.encode('utf-8'))
+            self.send_encrypted(message)
         except:
             pass
         self.confirmation_widget.close()
@@ -760,8 +786,7 @@ class Ui_MainWindow(object):
     def get_files_list(self):
         try:
             message = "req listDir"
-            self.my_socket.send(message.encode('utf-8'))
-            data = self.my_socket.recv(1024)
+            data = self.send_and_receive_encrypted(message)
             data = pickle.loads(data)
             return data
         except:
@@ -819,7 +844,7 @@ class Ui_MainWindow(object):
                     file_name = item.text()
                     self.myfiles_widget.list.takeItem(self.myfiles_widget.list.row(item))
                     message = "req deleteFile " + file_name
-                    self.my_socket.send(message.encode('utf-8'))
+                    self.send_encrypted(message)
         except:
             pass
 

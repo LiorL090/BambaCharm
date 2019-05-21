@@ -53,12 +53,6 @@ class Ui_MainWindow(object):
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
 
-        # self.menuSettings = QtWidgets.QMenu(self.menubar)
-        # self.menuSettings.setObjectName("menuSettings")
-        #
-        # self.menuEdit = QtWidgets.QMenu(self.menubar)
-        # self.menuEdit.setObjectName("menuEdit")
-
         self.menuUser = QtWidgets.QMenu(self.menubar)
         self.menuUser.setObjectName("menuUser")
 
@@ -70,12 +64,6 @@ class Ui_MainWindow(object):
         self.toolBar = QtWidgets.QToolBar(MainWindow)
         self.toolBar.setObjectName("toolBar")
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
-        # actions that appears in the bars
-        # self.actionNew = QtWidgets.QAction(MainWindow)
-        # icon1 = QtGui.QIcon()
-        # icon1.addPixmap(QtGui.QPixmap("icons/new file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        # self.actionNew.setIcon(icon1)
-        # self.actionNew.setObjectName("actionNew")
 
         self.actionOpen = QtWidgets.QAction(MainWindow)
         icon2 = QtGui.QIcon()
@@ -158,10 +146,7 @@ class Ui_MainWindow(object):
         self.menuUser.addAction(self.actionSignIn)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        # self.menubar.addAction(self.menuSettings.menuAction())
-        # self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuUser.menuAction())
-        # self.toolBar.addAction(self.actionNew)
         self.toolBar.addAction(self.actionpython)
         self.toolBar.addAction(self.actionNew_Text_File)
         self.toolBar.addAction(self.actioncmd)
@@ -176,10 +161,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "BambaCharm"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuUser.setTitle(_translate("MainWindow", "Bamba Cloud"))
-        # self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
-        # self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
-        # self.actionNew.setText(_translate("MainWindow", "New"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSaveAs.setText(_translate("MainWindow", "Save As"))
@@ -270,22 +252,12 @@ class Ui_MainWindow(object):
         self.tab_python.playButton.setFlat(True)
         self.tab_python.playButton.setObjectName("pushButton_2")
         self.tab_python.horizontalLayout.addWidget(self.tab_python.playButton)
-        self.tab_python.stopButton = QtWidgets.QPushButton(self.tab_python)
-        self.tab_python.stopButton.setText("")
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("icons/stop.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.tab_python.stopButton.setIcon(icon1)
-        self.tab_python.stopButton.setIconSize(QtCore.QSize(25, 25))
-        self.tab_python.stopButton.setFlat(True)
-        self.tab_python.stopButton.setObjectName("pushButton")
-        self.tab_python.horizontalLayout.addWidget(self.tab_python.stopButton)
         self.tab_python.verticalLayout.addLayout(self.tab_python.horizontalLayout)
         self.tab_python.jupyter_widget = self.make_jupyter_widget_with_kernel()
         self.tab_python.jupyter_widget.setMaximumSize(QtCore.QSize(16777215, 192))
-        self.tab_python.verticalLayout.addWidget(self.tab_python.jupyter_widget)
+        self.tab_python.horizontalLayout.addWidget(self.tab_python.jupyter_widget)
         self.tabWidget.addTab(self.tab_python, "Python")
         self.tab_python.playButton.clicked.connect(self.python_run_clicked)
-        self.tab_python.stopButton.clicked.connect(self.python_stop_clicked)
         return self.tab_python
 
     def add_cmd_commands_tab(self):
@@ -499,11 +471,18 @@ class Ui_MainWindow(object):
 
     def python_run_clicked(self):
         """run button in python tab clicked"""
-        widget = self.tabWidget.currentWidget()
-        command = "run " + widget.path
-        if widget.path == "":
-            command = "Make sure you have saved the script file"
-        widget.jupyter_widget.execute(source=command)
+        try:
+            widget = self.tabWidget.currentWidget()
+            command = "run " + widget.path
+            if widget.path == "":
+                file = open("me.py", 'w')
+                text = widget.textEdit.toPlainText()
+                file.write(text)
+                file.close()
+                command = "run me.py"
+            widget.jupyter_widget.execute(source=command)
+        except:
+            pass
 
     def python_stop_clicked(self):
         """run button in python tab clicked"""
@@ -569,12 +548,32 @@ class Ui_MainWindow(object):
         plaintext = self.my_box.decrypt(data)
         return plaintext
 
-    def send_encrypted(self, message):
+    def send_and_receive_encrypted_file(self, message):
         """ Encrypts and sends the given message, gets server response decrypts and returns it"""
         encrypted = self.my_box.encrypt(message.encode('utf-8'))
         self.my_socket.send(encrypted)
+        plaintext = b""
 
+        chunk = self.my_socket.recv(1024)
+        plaintext += chunk
 
+        while chunk:
+            try:
+                self.my_socket.settimeout(0.3)
+                chunk = self.my_socket.recv(4096)
+                self.my_socket.settimeout(None)
+            except:
+                break
+            plaintext += chunk
+
+        plaintext = self.my_box.decrypt(plaintext)
+
+        return plaintext.decode('utf-8')
+
+    def send_encrypted(self, message):
+        """ Encrypts and sends the given message, gets server response decrypts and returns it"""
+        encrypted = self.my_box.encrypt(message.encode('utf-8'))
+        self.my_socket.sendall(encrypted)
 
     def login_clicked(self):
         """when login button clicked open the login widget"""
@@ -831,9 +830,28 @@ class Ui_MainWindow(object):
 
     def open_server_file(self):
         """send request to server to get certain file"""
-        item = self.myfiles_widget.list.selectedItems()
-        if len(item) != 0:
-            file_name = item[0].text()
+        try:
+            items = self.myfiles_widget.list.selectedItems()
+            if items:
+                for item in items:
+                    file_name = item.text()
+                    message = "req giveFile " + file_name
+                    file_data = self.send_and_receive_encrypted_file(message)
+
+                    if file_name.endswith(".py"):
+                        tab = self.add_python_tab()
+                        tab.file_name = file_name
+                        self.tabWidget.setTabText(self.tabWidget.indexOf(tab),
+                                                  _translate("MainWindow", tab.file_name))
+                        tab.textEdit.setPlainText(file_data)
+                    else:
+                        tab = self.add_text_tab()
+                        tab.file_name = file_name
+                        self.tabWidget.setTabText(self.tabWidget.indexOf(tab),
+                                                  _translate("MainWindow", tab.file_name))
+                        tab.textEdit.setPlainText(file_data)
+        except:
+            pass
 
     def delete_server_file(self):
         """send request to server to delete certain file"""

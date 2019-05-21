@@ -117,6 +117,7 @@ def handle_client(this_socket, message):
         if message[1] == "logout":
             logged_users.pop(this_socket)
 
+        # deletes users account
         if message[1] == "delete":
             cursor.execute('''SELECT name  FROM users WHERE name=?''', (name,))
             data = cursor.fetchone()
@@ -128,11 +129,13 @@ def handle_client(this_socket, message):
                 db.commit()
                 shutil.rmtree("storage/%s" % name)
 
+        # sends list of all files in users directory
         if message[1] == "listDir":
             files_list = os.listdir("storage/%s" % name)
             data = pickle.dumps(files_list)
             messages_to_send.append((this_socket, data))
 
+        # deletes the file from users directory
         if message[1] == "deleteFile":
             file_name = ' '.join(map(str, message[2:]))
             file_path = "storage/" + name + "/" + file_name
@@ -140,11 +143,17 @@ def handle_client(this_socket, message):
                 if os.path.exists(file_path):
                     os.remove(file_path)
 
+        # sends the file to the user
         if message[1] == "giveFile":
-            file_path = "storage/" + name + "/" + message[2:]
+            file_name = ' '.join(map(str, message[2:]))
+            file_path = "storage/" + name + "/" + file_name
             if file_path:
                 if os.path.exists(file_path):
-                    shutil.rmtree(file_path)
+                    file = open(file_path, 'r').read()
+                    # data_to_send=[(this_socket, file[i:i + 4]) for i in range(0, len(file), 4)]
+                    # data_to_send.insert(0, (this_socket, str(len(data_to_send))))
+                    # messages_to_send.extend(data_to_send)
+                    messages_to_send.append((this_socket, file))
 
 
 def send_waiting_messages(wlist):

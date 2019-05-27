@@ -17,6 +17,7 @@ open_client_sockets = []
 messages_to_send = []
 logged_users = {}
 encryption_boxes = {}
+clients_uploading_file = {}
 db = sqlite3.connect('users')
 cursor = db.cursor()
 
@@ -25,6 +26,9 @@ class ClientSocket:
     def __init__(self, user_name, user_socket):
         self.user_name = user_name
         self.socket = user_socket
+        self.receiving_file = False
+        self.file_data = b''
+        self.file_path = ''
 
 
 def hash_password(salt, password):
@@ -135,25 +139,31 @@ def handle_client(this_socket, message):
             data = pickle.dumps(files_list)
             messages_to_send.append((this_socket, data))
 
-        # deletes the file from users directory
+        # deletes the file_data from users directory
         if message[1] == "deleteFile":
             file_name = ' '.join(map(str, message[2:]))
             file_path = "storage/" + name + "/" + file_name
-            if len(file_name) != 0:
+            if file_name:
                 if os.path.exists(file_path):
                     os.remove(file_path)
 
-        # sends the file to the user
+        # sends the file_data to the user
         if message[1] == "giveFile":
             file_name = ' '.join(map(str, message[2:]))
             file_path = "storage/" + name + "/" + file_name
-            if file_path:
+            if file_name:
                 if os.path.exists(file_path):
                     file = open(file_path, 'r').read()
-                    # data_to_send=[(this_socket, file[i:i + 4]) for i in range(0, len(file), 4)]
-                    # data_to_send.insert(0, (this_socket, str(len(data_to_send))))
-                    # messages_to_send.extend(data_to_send)
                     messages_to_send.append((this_socket, file))
+
+        # saves the file_data that user want to upload
+        if message[1] == "uploadFile":
+            file_name = ' '.join(map(str, message[2:]))
+            file_path = "storage/" + name + "/" + file_name
+            if file_name:
+                logged_users[this_socket].file_path = file_path
+                logged_users[current_socket].receiving_file = True
+                messages_to_send.append((this_socket, "ready"))
 
 
 def send_waiting_messages(wlist):
@@ -180,7 +190,8 @@ while True:
                 open_client_sockets.append(new_socket)
             else:
                 try:
-                    recv_data = current_socket.recv(1024)
+                    recv_data = current_socket.recv(4096)
+                    # if the socket doesnt have secure encryption we create it for him
                     if current_socket not in encryption_boxes.keys():
                         sk_server = PrivateKey.generate()
                         pk_server = sk_server.public_key
@@ -189,6 +200,22 @@ while True:
                         encryption_boxes[current_socket] = server_box
                         current_socket.sendall(pickle.dumps(pk_server))
 
+                    # if the socket is sending file to us we accept it until its complete and can be decrypted
+                    elif current_socket in logged_users and logged_users[current_socket].receiving_file:
+                        logged_users[current_socket].file_data += recv_data
+                        try:
+                            server_box = encryption_boxes[current_socket]
+                            file_data = logged_users[current_socket].file_data
+                            file_text = server_box.decrypt(file_data).decode('utf-8')
+                            file = open(logged_users[current_socket].file_path, 'w')
+                            file.write(file_text)
+                            file.close()
+                            logged_users[current_socket].receiving_file = False
+
+                        except:
+                            pass
+
+                    # basic client requests handler
                     else:
                         server_box = encryption_boxes[current_socket]
                         plaintext = server_box.decrypt(recv_data)
@@ -197,12 +224,10 @@ while True:
                             old_user(current_socket, recv_message)
                         elif recv_message.startswith("new_user"):
                             new_user(current_socket, recv_message)
-                        elif current_socket in logged_users.keys() and recv_message.startswith("req"):
+                        elif current_socket in logged_users and recv_message.startswith("req"):
                             handle_client(current_socket, recv_message)
-                        else:
-                            open_client_sockets.remove(current_socket)
                 except:
-                    open_client_sockets.remove(current_socket)
+                    pass
         send_waiting_messages(wlist)
     except:
         pass

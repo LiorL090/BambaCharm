@@ -137,6 +137,12 @@ class Ui_MainWindow(object):
         self.actionMyFiles.setIcon(icon12)
         self.actionMyFiles.setObjectName("actionMyFiles")
 
+        self.actionUploadFile = QtWidgets.QAction(MainWindow)
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap("icons/upload_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionUploadFile.setIcon(icon13)
+        self.actionUploadFile.setObjectName("actionUploadFile")
+
         # add actions to the bars
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
@@ -174,6 +180,7 @@ class Ui_MainWindow(object):
         self.actionLogOut.setText(_translate("MainWindow", "Log out"))
         self.actionDelete.setText(_translate("MainWindow", "Delete account"))
         self.actionMyFiles.setText(_translate("MainWindow", "My files"))
+        self.actionUploadFile.setText(_translate("MainWindow", "Upload File"))
 
         self.tabWidget.tabCloseRequested.connect(self.close_my_tab)
         self.actionpython.triggered.connect(self.add_python_tab)
@@ -188,6 +195,7 @@ class Ui_MainWindow(object):
         self.actionLogOut.triggered.connect(self.logout_clicked)
         self.actionDelete.triggered.connect(self.delete_clicked)
         self.actionMyFiles.triggered.connect(self.myfiles_clicked)
+        self.actionUploadFile.triggered.connect(self.uploadfile_clicked)
 
     def close_my_tab(self, n):
         """Closes the tab"""
@@ -484,11 +492,6 @@ class Ui_MainWindow(object):
         except:
             pass
 
-    def python_stop_clicked(self):
-        """run button in python tab clicked"""
-        widget = self.tabWidget.currentWidget()
-        widget.jupyter_widget.reset("")
-
     def login_widget_create(self):
         """Creates login widget"""
         self.login_widget = QtWidgets.QWidget()
@@ -496,9 +499,9 @@ class Ui_MainWindow(object):
         self.login_widget.setFixedSize(QtCore.QSize(300, 300))
         self.login_widget.setWindowTitle(_translate("MainWindow", "Login"))
         self.login_widget.setAutoFillBackground(True)
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap("icons/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.login_widget.setWindowIcon(icon8)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.login_widget.setWindowIcon(icon)
 
         oImage = QtGui.QImage("icons\login_back.png")
         sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
@@ -543,12 +546,12 @@ class Ui_MainWindow(object):
     def send_and_receive_encrypted(self, message):
         """ Encrypts and sends the given message, gets server response decrypts and returns it"""
         encrypted = self.my_box.encrypt(message.encode('utf-8'))
-        self.my_socket.send(encrypted)
+        self.my_socket.sendall(encrypted)
         data = self.my_socket.recv(1024)
         plaintext = self.my_box.decrypt(data)
         return plaintext
 
-    def send_and_receive_encrypted_file(self, message):
+    def send_message_and_receive_encrypted_file(self, message):
         """ Encrypts and sends the given message, gets server response decrypts and returns it"""
         encrypted = self.my_box.encrypt(message.encode('utf-8'))
         self.my_socket.send(encrypted)
@@ -605,6 +608,7 @@ class Ui_MainWindow(object):
                 self.menuUser.removeAction(self.actionLogIn)
                 self.menuUser.removeAction(self.actionSignIn)
                 self.menuUser.addAction(self.actionMyFiles)
+                self.menuUser.addAction(self.actionUploadFile)
                 self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
@@ -620,6 +624,7 @@ class Ui_MainWindow(object):
         except:
             pass
         self.menuUser.removeAction(self.actionMyFiles)
+        self.menuUser.removeAction(self.actionUploadFile)
         self.menuUser.removeAction(self.actionLogOut)
         self.menuUser.removeAction(self.actionDelete)
         self.menuUser.addAction(self.actionLogIn)
@@ -632,9 +637,9 @@ class Ui_MainWindow(object):
         self.signin_widget.setFixedSize(QtCore.QSize(300, 300))
         self.signin_widget.setWindowTitle(_translate("MainWindow", "Sign In"))
         self.signin_widget.setAutoFillBackground(True)
-        icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap("icons/signin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.signin_widget.setWindowIcon(icon9)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/signin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.signin_widget.setWindowIcon(icon)
 
         oImage = QtGui.QImage("icons\signin_back.jpg")
         sImage = oImage.scaled(QtCore.QSize(300, 300))  # resize Image to widgets size
@@ -716,6 +721,7 @@ class Ui_MainWindow(object):
                 self.menuUser.removeAction(self.actionLogIn)
                 self.menuUser.removeAction(self.actionSignIn)
                 self.menuUser.addAction(self.actionMyFiles)
+                self.menuUser.addAction(self.actionUploadFile)
                 self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
@@ -736,6 +742,7 @@ class Ui_MainWindow(object):
             pass
         self.confirmation_widget.close()
         self.menuUser.removeAction(self.actionMyFiles)
+        self.menuUser.removeAction(self.actionUploadFile)
         self.menuUser.removeAction(self.actionLogOut)
         self.menuUser.removeAction(self.actionDelete)
         self.menuUser.addAction(self.actionLogIn)
@@ -748,9 +755,9 @@ class Ui_MainWindow(object):
         self.confirmation_widget.setFixedSize(QtCore.QSize(400, 100))
         self.confirmation_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
         self.confirmation_widget.setAutoFillBackground(True)
-        icon11 = QtGui.QIcon()
-        icon11.addPixmap(QtGui.QPixmap("icons/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.confirmation_widget.setWindowIcon(icon11)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.confirmation_widget.setWindowIcon(icon)
 
         self.confirmation_widget.label = QtWidgets.QLabel(self.confirmation_widget)
         self.confirmation_widget.label.setText("Are you sure you want to delete your Bambacharm account?")
@@ -799,11 +806,11 @@ class Ui_MainWindow(object):
         self.myfiles_widget = QtWidgets.QWidget()
         self.myfiles_widget.verticalLayout = QtWidgets.QVBoxLayout(self.myfiles_widget)
         self.myfiles_widget.setFixedSize(QtCore.QSize(200, 300))
-        self.myfiles_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
+        self.myfiles_widget.setWindowTitle(_translate("MainWindow", "My Files"))
         self.myfiles_widget.setAutoFillBackground(True)
-        icon12 = QtGui.QIcon()
-        icon12.addPixmap(QtGui.QPixmap("icons/cloud.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.myfiles_widget.setWindowIcon(icon12)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/cloud.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.myfiles_widget.setWindowIcon(icon)
 
         self.myfiles_widget.list = QtWidgets.QListWidget(self.myfiles_widget)
         self.myfiles_widget.list.setStyleSheet("background-color: rgb(224, 155, 76);")
@@ -829,14 +836,14 @@ class Ui_MainWindow(object):
         return self.myfiles_widget
 
     def open_server_file(self):
-        """send request to server to get certain file"""
+        """send request to server to get certain file_data"""
         try:
             items = self.myfiles_widget.list.selectedItems()
             if items:
                 for item in items:
                     file_name = item.text()
                     message = "req giveFile " + file_name
-                    file_data = self.send_and_receive_encrypted_file(message)
+                    file_data = self.send_message_and_receive_encrypted_file(message)
 
                     if file_name.endswith(".py"):
                         tab = self.add_python_tab()
@@ -854,7 +861,7 @@ class Ui_MainWindow(object):
             pass
 
     def delete_server_file(self):
-        """send request to server to delete certain file"""
+        """send request to server to delete certain file_data"""
         try:
             items = self.myfiles_widget.list.selectedItems()
             if items:
@@ -865,6 +872,94 @@ class Ui_MainWindow(object):
                     self.send_encrypted(message)
         except:
             pass
+
+    def uploadfile_clicked(self):
+        """when upload file_data button clicked open the upload file_data widget"""
+        widget = self.create_upload_widget()
+        widget.show()
+
+    def upload_file(self):
+        widget = self.tabWidget.currentWidget()
+        if widget is not None:
+            if widget.savable:
+                if widget.objectName() == "text_tab":
+                    ending = ".txt"
+                else:
+                    ending = ".py"
+                file_name = self.upload_widget.textEditFileName.toPlainText()
+                message = "req uploadFile " + file_name + ending
+                response = self.send_and_receive_encrypted(message).decode('utf-8')
+                if response == "ready":
+                    text = widget.textEdit.toPlainText()
+                    self.send_encrypted(text)
+                    self.upload_widget.close()
+            else:
+                self.create_alert_widget("You can save only python or text files, please open one of them.")
+        else:
+            self.create_alert_widget("Please open python or text tab.")
+
+    def cancel_upload(self):
+        """user clicks cancel"""
+        self.upload_widget.close()
+
+    def create_upload_widget(self):
+        """Creates upload widget"""
+        self.upload_widget = QtWidgets.QWidget()
+        self.upload_widget.verticalLayout = QtWidgets.QVBoxLayout(self.upload_widget)
+        self.upload_widget.setFixedSize(QtCore.QSize(400, 100))
+        self.upload_widget.setWindowTitle(_translate("MainWindow", "Confirm deletion"))
+        self.upload_widget.setAutoFillBackground(True)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/upload_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.upload_widget.setWindowIcon(icon)
+
+        self.upload_widget.hLayout1 = QtWidgets.QHBoxLayout()
+        self.upload_widget.label = QtWidgets.QLabel(self.upload_widget)
+        self.upload_widget.label.setText("File name:")
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.upload_widget.label.setFont(font)
+
+        self.upload_widget.textEditFileName = QtWidgets.QTextEdit(self.upload_widget)
+        self.upload_widget.textEditFileName.setMaximumSize(QtCore.QSize(16777215, 30))
+
+        self.upload_widget.hLayout1.addWidget(self.upload_widget.label)
+        self.upload_widget.hLayout1.addWidget(self.upload_widget.textEditFileName)
+
+        self.upload_widget.hLayout2 = QtWidgets.QHBoxLayout()
+        self.upload_widget.button_yes = QtWidgets.QPushButton(self.upload_widget)
+        self.upload_widget.button_yes.setText("Upload")
+        self.upload_widget.button_yes.clicked.connect(self.upload_file)
+        self.upload_widget.button_no = QtWidgets.QPushButton(self.upload_widget)
+        self.upload_widget.button_no.setText("Cancel")
+        self.upload_widget.button_no.clicked.connect(self.cancel_upload)
+        self.upload_widget.hLayout2.addWidget(self.upload_widget.button_yes)
+        self.upload_widget.hLayout2.addWidget(self.upload_widget.button_no)
+
+        self.upload_widget.verticalLayout.addLayout(self.upload_widget.hLayout1)
+        self.upload_widget.verticalLayout.addLayout(self.upload_widget.hLayout2)
+
+        return self.upload_widget
+
+    def create_alert_widget(self, text):
+        """ creates alert widget to notify the user"""
+        self.alert_widget = QtWidgets.QWidget()
+        self.alert_widget.verticalLayout = QtWidgets.QVBoxLayout(self.alert_widget)
+        self.alert_widget.setWindowTitle(_translate("MainWindow", ""))
+        self.alert_widget.setFixedSize(QtCore.QSize(400, 50))
+        self.alert_widget.setAutoFillBackground(True)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("icons/alert.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.alert_widget.setWindowIcon(icon)
+
+        self.alert_widget.label = QtWidgets.QLabel(self.alert_widget)
+        self.alert_widget.label.setText(text)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.alert_widget.label.setFont(font)
+
+        self.alert_widget.verticalLayout.addWidget(self.alert_widget.label)
+        self.alert_widget.show()
 
 
 if __name__ == "__main__":

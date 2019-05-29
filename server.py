@@ -128,8 +128,8 @@ def handle_client(this_socket, message):
             if data is not None:
                 logged_users.pop(this_socket)
                 cursor.execute('''DELETE FROM users
-                WHERE name = "%s";
-                 ''' % name)
+                WHERE name = ?;
+                 ''', (name,))
                 db.commit()
                 shutil.rmtree("storage/%s" % name)
 
@@ -211,6 +211,9 @@ while True:
                             file.write(file_text)
                             file.close()
                             logged_users[current_socket].receiving_file = False
+                            logged_users[current_socket].file_data = b''
+                            logged_users[current_socket].file_path = ""
+                            messages_to_send.append((current_socket, "done"))
 
                         except:
                             pass

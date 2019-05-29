@@ -612,8 +612,7 @@ class Ui_MainWindow(object):
                 self.menuUser.addSeparator()
                 self.menuUser.addAction(self.actionLogOut)
                 self.menuUser.addAction(self.actionDelete)
-        except Exception as ex:
-            print(ex.args)
+        except:
             self.login_widget.label.setText("Server is not responding")
 
     def logout_clicked(self):
@@ -891,8 +890,9 @@ class Ui_MainWindow(object):
                 response = self.send_and_receive_encrypted(message).decode('utf-8')
                 if response == "ready":
                     text = widget.textEdit.toPlainText()
-                    self.send_encrypted(text)
-                    self.upload_widget.close()
+                    response = self.send_and_receive_encrypted(text).decode('utf-8')
+                    if response == "done":
+                        self.upload_widget.close()
             else:
                 self.create_alert_widget("You can save only python or text files, please open one of them.")
         else:

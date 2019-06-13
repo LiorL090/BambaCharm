@@ -9,6 +9,7 @@ from nacl.public import PrivateKey, Box
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.manager import QtKernelManager
 
+server_ip = "127.0.0.1"
 # colors
 yellow = "rgb(155, 140, 30)"
 green = "rgb(115, 198, 118)"
@@ -562,7 +563,7 @@ class Ui_MainWindow(object):
 
         while chunk:
             try:
-                self.my_socket.settimeout(0.3)
+                self.my_socket.settimeout(0.1)
                 chunk = self.my_socket.recv(4096)
                 self.my_socket.settimeout(None)
             except:
@@ -590,7 +591,9 @@ class Ui_MainWindow(object):
             password = self.login_widget.lineEditPass.text()
             message = "old_user " + username + " " + password
             self.my_socket = socket.socket()
-            self.my_socket.connect(("127.0.0.1", 8820))
+            self.my_socket.settimeout(0.1)
+            self.my_socket.connect((server_ip, 8820))
+            self.my_socket.settimeout(None)
 
             # Generates keys and box for encrypted communication with the server
             sk_client = PrivateKey.generate()
@@ -702,7 +705,9 @@ class Ui_MainWindow(object):
             email = self.signin_widget.lineEditEmail.text()
             message = "new_user " + username + " " + password + " " + email
             self.my_socket = socket.socket()
-            self.my_socket.connect(("127.0.0.1", 8820))
+            self.my_socket.settimeout(0.1)
+            self.my_socket.connect((server_ip, 8820))
+            self.my_socket.settimeout(None)
 
             # Generates keys and box for encrypted communication with the server
             sk_client = PrivateKey.generate()

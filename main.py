@@ -527,6 +527,7 @@ class Ui_MainWindow(object):
 
         self.login_widget.hLayout2 = QtWidgets.QHBoxLayout()
         self.login_widget.lineEditPass = QtWidgets.QLineEdit()
+        self.login_widget.lineEditPass.setEchoMode(QtWidgets.QLineEdit.Password)
         self.login_widget.labelP = QtWidgets.QLabel()
         self.login_widget.labelP.setMaximumSize(QtCore.QSize(50, 20))
         self.login_widget.labelP.setText("Password:")
@@ -666,6 +667,7 @@ class Ui_MainWindow(object):
 
         self.signin_widget.hLayout2 = QtWidgets.QHBoxLayout()
         self.signin_widget.lineEditPass = QtWidgets.QLineEdit()
+        self.signin_widget.lineEditPass.setEchoMode(QtWidgets.QLineEdit.Password)
         self.signin_widget.labelP = QtWidgets.QLabel()
         self.signin_widget.labelP.setMaximumSize(QtCore.QSize(50, 20))
         self.signin_widget.labelP.setText("Password:")
@@ -676,7 +678,7 @@ class Ui_MainWindow(object):
         self.signin_widget.lineEditEmail = QtWidgets.QLineEdit()
         self.signin_widget.labelE = QtWidgets.QLabel()
         self.signin_widget.labelE.setMaximumSize(QtCore.QSize(50, 20))
-        self.signin_widget.labelE.setText("Email:   ")
+        self.signin_widget.labelE.setText("Email:        ")
         self.signin_widget.hLayout3.addWidget(self.signin_widget.labelE)
         self.signin_widget.hLayout3.addWidget(self.signin_widget.lineEditEmail)
 
